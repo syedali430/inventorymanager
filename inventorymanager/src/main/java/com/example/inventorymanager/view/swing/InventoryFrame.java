@@ -1,4 +1,4 @@
-﻿package com.example.inventorymanager.view.swing;
+package com.example.inventorymanager.view.swing;
 
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepository;
@@ -245,3 +245,5 @@ public class InventoryFrame extends JFrame {
         public void changedUpdate(javax.swing.event.DocumentEvent e) { callback.run(); }
     }
 }
+
+

@@ -167,3 +167,4 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 			.deleteOne(Filters.eq("id", id));
 	}
 }
+

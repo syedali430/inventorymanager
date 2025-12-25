@@ -336,3 +336,4 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 }
 
 
+

@@ -76,3 +76,4 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
     }
 }
 
+
