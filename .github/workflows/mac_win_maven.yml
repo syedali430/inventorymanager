@@ -1,4 +1,4 @@
-name: Java CI with Maven with Windows and Mac
+﻿name: Java CI with Maven with Windows and Mac
 
 on:
   push:
@@ -30,4 +30,4 @@ jobs:
         distribution: 'temurin'
      - name: Build with Maven
        run: mvn test
-       working-directory: inventorymanger
+       working-directory: .
