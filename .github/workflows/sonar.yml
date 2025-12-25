@@ -30,12 +30,13 @@ jobs:
     - name: Build with Maven and SonarCloud
       run: >
         xvfb-run mvn verify -Pjacoco sonar:sonar
-        -Dsonar.organization=muswarali
+        -Dsonar.organization=syedali430
         -Dsonar.host.url=https://sonarcloud.io
-        -Dsonar.projectKey=muswarali_inventorymanager
+        -Dsonar.projectKey=syedali430_inventorymanager
 
       working-directory: inventorymanager
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
