@@ -30,4 +30,5 @@ jobs:
         distribution: 'temurin'
      - name: Build with Maven
        run: mvn test
-       working-directory: .
+       working-directory: inventorymanager
+

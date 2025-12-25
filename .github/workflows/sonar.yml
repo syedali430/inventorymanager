@@ -34,7 +34,8 @@ jobs:
         -Dsonar.host.url=https://sonarcloud.io
         -Dsonar.projectKey=muswarali_inventorymanager
 
-      working-directory: .
+      working-directory: inventorymanager
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
