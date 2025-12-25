@@ -1,4 +1,4 @@
-package com.example.inventorymanager.view.swing;
+﻿package com.example.inventorymanager.view.swing;
 
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepository;
@@ -40,6 +40,8 @@ public class InventoryFrame extends JFrame {
         for (Item item : existingItems) {
             SwingUtilities.invokeLater(() -> listModel.addElement(item));
         }
+
+        updateSelectionState();
     }
 
     private void initUI() {
@@ -80,12 +82,14 @@ public class InventoryFrame extends JFrame {
 
         updateButton = new JButton("Update Item");
         updateButton.setName("updateButton");
+        updateButton.setEnabled(false);
         updateButton.addActionListener(this::onUpdateItem);
         updateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         updateButton.setPreferredSize(new Dimension(160, 38));
 
         deleteButton = new JButton("Delete Item");
         deleteButton.setName("deleteButton");
+        deleteButton.setEnabled(false);
         deleteButton.addActionListener(this::onDeleteItem);
         deleteButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         deleteButton.setPreferredSize(new Dimension(160, 38));
@@ -109,13 +113,41 @@ public class InventoryFrame extends JFrame {
         nameField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
         quantityField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
         priceField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
+
+        // Sync detail fields + buttons on selection change
+        itemList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateSelectionState();
+            }
+        });
     }
 
     private void updateAddButtonState() {
         boolean enabled = !nameField.getText().trim().isEmpty() &&
                         !quantityField.getText().trim().isEmpty() &&
-                        !priceField.getText().trim().isEmpty();
+                        !priceField.getText().trim().isEmpty() &&
+                        itemList.getSelectedIndex() == -1;
         addButton.setEnabled(enabled);
+    }
+
+    private void updateSelectionState() {
+        Item selected = itemList.getSelectedValue();
+        boolean hasSelection = selected != null;
+        deleteButton.setEnabled(hasSelection);
+        updateButton.setEnabled(hasSelection);
+        if (hasSelection) {
+            nameField.setText(selected.getName());
+            quantityField.setText(String.valueOf(selected.getQuantity()));
+            priceField.setText(String.valueOf(selected.getPrice()));
+            descField.setText(selected.getDescription());
+            addButton.setEnabled(false);
+        } else {
+            nameField.setText("");
+            quantityField.setText("");
+            priceField.setText("");
+            descField.setText("");
+            updateAddButtonState();
+        }
     }
 
 
@@ -136,11 +168,8 @@ public class InventoryFrame extends JFrame {
             listModel.addElement(item);
 
             // Clear fields
-            nameField.setText("");
-            quantityField.setText("");
-            priceField.setText("");
-            descField.setText("");
-            addButton.setEnabled(false);
+            itemList.clearSelection();
+            updateSelectionState();
 
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -194,6 +223,7 @@ public class InventoryFrame extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             repository.delete(selected.getId());
             listModel.removeElement(selected);
+            updateSelectionState();
         }
     }
 
