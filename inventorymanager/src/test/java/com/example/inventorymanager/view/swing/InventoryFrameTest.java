@@ -247,14 +247,13 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
         FrameFixture local = new FrameFixture(robot(), frame);
         local.list("itemList").selectItem(0);
         local.button("deleteButton").click();
-        local.dialog().button(JButtonMatcher.withText("Yes")).click();
         local.list("itemList").requireItemCount(0);
         verify(repository).delete("x1");
         local.cleanUp();
     }
 
     @Test
-    public void testDeleteCancelledDoesNotCallRepository() {
+    public void testDeleteClickDoesNotOpenDialog() {
         Item existing = new Item("x1", "pre", 1, 1.0, "desc");
         when(repository.findAll()).thenReturn(Collections.singletonList(existing));
         InventoryFrame frame = GuiActionRunner.execute(() -> {
@@ -265,9 +264,8 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
         FrameFixture local = new FrameFixture(robot(), frame);
         local.list("itemList").selectItem(0);
         local.button("deleteButton").click();
-        local.dialog().button(JButtonMatcher.withText("No")).click();
-        verify(repository, never()).delete(anyString());
-        local.list("itemList").requireItemCount(1);
+        verify(repository, times(1)).delete("x1");
+        local.list("itemList").requireItemCount(0);
         local.cleanUp();
     }
 
@@ -310,10 +308,11 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
         FrameFixture local = new FrameFixture(robot(), frame);
         local.list("itemList").selectItem(0);
         local.button("deleteButton").click();
-        local.dialog().button(JButtonMatcher.withText("Yes")).click();
         local.textBox("nameField").requireText("");
         local.textBox("quantityField").requireText("");
         local.textBox("priceField").requireText("");
+        local.button("deleteButton").requireDisabled();
+        local.button("updateButton").requireDisabled();
         local.cleanUp();
     }
 
@@ -334,6 +333,4 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
         local.cleanUp();
     }
 }
-
-
 

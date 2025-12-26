@@ -6,7 +6,6 @@ import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.*;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -19,8 +18,8 @@ public class ItemRepositoryTest {
     @BeforeClass
     public static void startMongo() {
         mongoServer = new MongoServer(new MemoryBackend());
-        InetSocketAddress address = mongoServer.bind("localhost", 0);
-        port = address.getPort();
+        mongoServer.bind("localhost", 0);
+        port = mongoServer.getLocalAddress().getPort();
     }
 
     @AfterClass
