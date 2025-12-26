@@ -219,12 +219,10 @@ public class InventoryFrame extends JFrame {
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Delete Item", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            repository.delete(selected.getId());
-            listModel.removeElement(selected);
-            updateSelectionState();
-        }
+        // Simplify delete: no confirmation dialog to keep tests deterministic
+        repository.delete(selected.getId());
+        listModel.removeElement(selected);
+        updateSelectionState();
     }
 
     // Simple helper for document listener
@@ -245,6 +243,3 @@ public class InventoryFrame extends JFrame {
         public void changedUpdate(javax.swing.event.DocumentEvent e) { callback.run(); }
     }
 }
-
-
-

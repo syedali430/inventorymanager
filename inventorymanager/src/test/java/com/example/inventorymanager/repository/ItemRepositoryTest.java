@@ -2,42 +2,31 @@ package com.example.inventorymanager.repository;
 
 import com.example.inventorymanager.model.Item;
 import com.mongodb.MongoClient;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.*;
-import static org.junit.Assert.*;
+
+import java.net.InetSocketAddress;
 import java.util.List;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.runtime.Network;
+
+import static org.junit.Assert.*;
 
 public class ItemRepositoryTest {
 
-    private static MongodExecutable mongodExecutable;
-    private static MongodProcess mongod;
+    private static MongoServer mongoServer;
     private static int port;
 
     @BeforeClass
-    public static void startMongo() throws Exception {
-        port = Network.getFreeServerPort();
-        MongodConfig mongodConfig = MongodConfig.builder()
-                .version(Version.Main.V4_4)
-                .net(new Net(port, Network.localhostIsIPv6()))
-                .build();
-        MongodStarter starter = MongodStarter.getDefaultInstance();
-        mongodExecutable = starter.prepare(mongodConfig);
-        mongod = mongodExecutable.start();
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        InetSocketAddress address = mongoServer.bind("localhost", 0);
+        port = address.getPort();
     }
 
     @AfterClass
     public static void stopMongo() {
-        if (mongod != null) {
-            mongod.stop();
-        }
-        if (mongodExecutable != null) {
-            mongodExecutable.stop();
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
         }
     }
 
@@ -133,4 +122,3 @@ public class ItemRepositoryTest {
         assertTrue(repo.findAll().isEmpty());
     }
 }
-
