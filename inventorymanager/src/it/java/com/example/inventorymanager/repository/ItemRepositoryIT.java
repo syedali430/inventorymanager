@@ -2,13 +2,8 @@ package com.example.inventorymanager.repository;
 
 import com.example.inventorymanager.model.Item;
 import com.mongodb.MongoClient;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.runtime.Network;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.*;
 
 import java.util.List;
@@ -17,29 +12,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ItemRepositoryIT {
 
-    private static MongodExecutable mongodExecutable;
-    private static MongodProcess mongod;
+    private static MongoServer mongoServer;
     private static int port;
 
     @BeforeClass
-    public static void startMongo() throws Exception {
-        port = Network.getFreeServerPort();
-        MongodConfig mongodConfig = MongodConfig.builder()
-                .version(Version.Main.V4_4)
-                .net(new Net(port, Network.localhostIsIPv6()))
-                .build();
-        MongodStarter starter = MongodStarter.getDefaultInstance();
-        mongodExecutable = starter.prepare(mongodConfig);
-        mongod = mongodExecutable.start();
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        port = mongoServer.getLocalAddress().getPort();
     }
 
     @AfterClass
     public static void stopMongo() {
-        if (mongod != null) {
-            mongod.stop();
-        }
-        if (mongodExecutable != null) {
-            mongodExecutable.stop();
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
         }
     }
 
@@ -71,5 +57,3 @@ public class ItemRepositoryIT {
         assertThat(repo.findById("missing")).isNotPresent();
     }
 }
-
-

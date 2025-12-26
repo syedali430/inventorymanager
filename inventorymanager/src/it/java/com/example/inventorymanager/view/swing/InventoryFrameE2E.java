@@ -2,13 +2,8 @@ package com.example.inventorymanager.view.swing;
 
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepository;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.runtime.Network;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
@@ -20,29 +15,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 
-    private static MongodExecutable mongodExecutable;
-    private static MongodProcess mongod;
+    private static MongoServer mongoServer;
     private static int port;
 
     @BeforeClass
-    public static void startMongo() throws Exception {
-        port = Network.getFreeServerPort();
-        MongodConfig mongodConfig = MongodConfig.builder()
-                .version(Version.Main.V4_4)
-                .net(new Net(port, Network.localhostIsIPv6()))
-                .build();
-        MongodStarter starter = MongodStarter.getDefaultInstance();
-        mongodExecutable = starter.prepare(mongodConfig);
-        mongod = mongodExecutable.start();
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        port = mongoServer.getLocalAddress().getPort();
     }
 
     @AfterClass
     public static void stopMongo() {
-        if (mongod != null) {
-            mongod.stop();
-        }
-        if (mongodExecutable != null) {
-            mongodExecutable.stop();
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
         }
     }
 
@@ -75,5 +61,3 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
         assertThat(saved.getName()).isEqualTo("e2e-item");
     }
 }
-
-
