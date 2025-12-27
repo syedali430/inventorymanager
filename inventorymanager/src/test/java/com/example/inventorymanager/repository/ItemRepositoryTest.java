@@ -59,6 +59,24 @@ public class ItemRepositoryTest {
     }
 
     @Test
+    public void testDefaultConstructorUsesConfigurablePort() {
+        MongoServer localServer = new MongoServer(new MemoryBackend());
+        localServer.bind("localhost", 0);
+        int customPort = localServer.getLocalAddress().getPort();
+        System.setProperty("inventory.mongo.host", "localhost");
+        System.setProperty("inventory.mongo.port", String.valueOf(customPort));
+        try {
+            ItemRepository repo = new ItemRepository();
+            repo.save(new Item("def", "default", 1, 1.0, "d"));
+            assertEquals(1, repo.findAll().size());
+        } finally {
+            System.clearProperty("inventory.mongo.host");
+            System.clearProperty("inventory.mongo.port");
+            localServer.shutdownNow();
+        }
+    }
+
+    @Test
     public void testFindAllEmpty() {
         ItemRepository repo = newRepo();
         assertTrue(repo.findAll().isEmpty());
@@ -121,3 +139,4 @@ public class ItemRepositoryTest {
         assertTrue(repo.findAll().isEmpty());
     }
 }
+

@@ -1,4 +1,4 @@
-package com.example.inventorymanager.repository;
+﻿package com.example.inventorymanager.repository;
 
 import com.example.inventorymanager.model.Item;
 import com.mongodb.MongoClient;
@@ -16,7 +16,7 @@ public class ItemRepository {
     private final MongoClient client;
 
     public ItemRepository() {
-        this(new MongoClient("localhost", 27017));
+        this(new MongoClient(defaultHost(), defaultPort()));
     }
 
     public ItemRepository(String host, int port) {
@@ -27,6 +27,19 @@ public class ItemRepository {
         this.client = client;
         MongoDatabase database = client.getDatabase("inventorydb");
         collection = database.getCollection("items");
+    }
+
+    private static String defaultHost() {
+        return System.getProperty("inventory.mongo.host", "localhost");
+    }
+
+    private static int defaultPort() {
+        String port = System.getProperty("inventory.mongo.port", "27017");
+        try {
+            return Integer.parseInt(port);
+        } catch (NumberFormatException e) {
+            return 27017;
+        }
     }
 
     public void save(Item item) {
@@ -79,4 +92,3 @@ public class ItemRepository {
         collection.deleteOne(new Document("id", id));
     }
 }
-
