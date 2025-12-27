@@ -138,5 +138,31 @@ public class ItemRepositoryTest {
         repo.update(ghost);
         assertTrue(repo.findAll().isEmpty());
     }
+
+    @Test
+    public void testDefaultPortFallsBackOnInvalidValue() throws Exception {
+        System.setProperty("inventory.mongo.port", "not-a-number");
+        try {
+            java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultPort");
+            m.setAccessible(true);
+            int port = (int) m.invoke(null);
+            assertEquals(27017, port);
+        } finally {
+            System.clearProperty("inventory.mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultHostUsesSystemProperty() throws Exception {
+        System.setProperty("inventory.mongo.host", "customhost");
+        try {
+            java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultHost");
+            m.setAccessible(true);
+            String host = (String) m.invoke(null);
+            assertEquals("customhost", host);
+        } finally {
+            System.clearProperty("inventory.mongo.host");
+        }
+    }
 }
 
