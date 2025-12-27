@@ -1,4 +1,4 @@
-﻿package com.example.inventorymanager.repository;
+package com.example.inventorymanager.repository;
 
 import com.example.inventorymanager.model.Item;
 import com.mongodb.MongoClient;
