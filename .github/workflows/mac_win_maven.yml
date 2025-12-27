@@ -1,4 +1,4 @@
-﻿name: Java CI with Maven with Windows and Mac
+name: Java CI with Maven with Windows and Mac
 
 on:
   push:
