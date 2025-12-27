@@ -5,6 +5,7 @@ import javax.swing.JFrame;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.launcher.ApplicationLauncher.*;
 
+import java.awt.GraphicsEnvironment;
 import java.util.regex.Pattern;
 
 import org.assertj.swing.annotation.GUITest;
@@ -16,6 +17,7 @@ import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.bson.Document;
 import org.junit.ClassRule;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testcontainers.containers.MongoDBContainer;
@@ -49,6 +51,11 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 	private MongoClient mongoClient;
 
 	private FrameFixture window;
+
+	@BeforeClass
+	public static void skipIfHeadless() {
+		org.junit.Assume.assumeFalse("Skipping Swing E2E on headless env", GraphicsEnvironment.isHeadless());
+	}
 
 	@Override
 	protected void onSetUp() throws Exception {
