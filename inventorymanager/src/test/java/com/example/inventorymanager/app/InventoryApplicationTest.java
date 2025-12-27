@@ -4,6 +4,7 @@ import com.example.inventorymanager.view.swing.InventoryFrame;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 
 import java.awt.*;
 
@@ -12,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 public class InventoryApplicationTest {
 
     @Test
-    public void testMainLaunchesFrameUsingConfigurablePort() throws Exception {
+    public void testMainLaunchesFrameUsingConfigurablePort() {
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
@@ -31,7 +32,7 @@ public class InventoryApplicationTest {
                     }
                 }
             }
-            assertTrue(found != null);
+            assertNotNull(found);
             if (found != null) {
                 found.dispose();
             }
