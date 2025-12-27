@@ -399,6 +399,7 @@
 					<excludes>
 						<exclude>**/com/example/inventorymanager/app/**</exclude>
 						<exclude>**/model/*.*</exclude>
+						<exclude>**/view/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -474,6 +475,7 @@
 							<excludes>
 								<exclude>**/model/*.*</exclude>
 								<exclude>**/com/example/inventorymanager/app/**</exclude>
+								<exclude>**/view/**</exclude>
 							</excludes>
 						</configuration>
 						<executions>
