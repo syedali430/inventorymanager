@@ -12,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 public class InventoryApplicationTest {
 
     @Test
-    public void testMainLaunchesFrameUsingConfigurablePort() {
+    public void testMainLaunchesFrameUsingConfigurablePort() throws Exception {
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
@@ -31,7 +31,7 @@ public class InventoryApplicationTest {
                     }
                 }
             }
-            assertNotNull(found);
+            assertTrue(found != null);
             if (found != null) {
                 found.dispose();
             }
