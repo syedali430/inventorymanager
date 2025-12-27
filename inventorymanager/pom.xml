@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.example</groupId>
-	<artifactId>inventorymanager</artifactId>
+	<artifactId>inventorymanger</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>inventorymanager</name>
+	<name>inventorymanger</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -295,40 +295,38 @@
 						<id>pitest</id>
 						<phase>test</phase>
 						<goals>
-							<goal>mutationCoverage</goal>
-						</goals>
-					</execution>
+					<goal>mutationCoverage</goal>
+				</goals>
+			</execution>
 				</executions>
 				<configuration>
 					<targetClasses>
-						<param>com.example.inventorymanager.*.*</param>
+						<param>com.example.inventorymanager.model.*</param>
+						<param>com.example.inventorymanager.repository.*</param>
+						<param>com.example.inventorymanager.App</param>
 					</targetClasses>
 					<targetTests>
-						<param>com.example.inventorymanager.*.*</param>
+						<param>com.example.inventorymanager.*</param>
 					</targetTests>
 					<excludedClasses>
 						<param>
-							com.example.inventorymanager.repository.**</param>
-						<param>
-							com.example.inventorymanager.view.swing.**</param>
-						<param>
-							com.example.inventorymanager.model.**</param>
-						<param>
 							com.example.inventorymanager.app.**</param>
+						<param>
+							com.example.inventorymanager.view.**</param>
 
 					</excludedClasses>
 					<excludedTestClasses>
 						<param>
-							com.example.inventorymanager.controller.**IT</param>
+							com.example.inventorymanager.view.**</param>
+						<param>
+							com.example.inventorymanager.app.InventoryApplicationTest</param>
+						<param>
+							com.example.inventorymanager.*IT*</param>
 						<param>
 							com.example.inventorymanager.bdd.**</param>
 
 						<param>
 							com.example.inventorymanager.**E2E</param>
-						<param>
-							com.example.inventorymanager.repository.**</param>
-						<param>
-							com.example.inventorymanager.view.swing.**</param>
 						<param>
 							com.example.inventorymanager.controller.racecondition.**</param>
 					</excludedTestClasses>
