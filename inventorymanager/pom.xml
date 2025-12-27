@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.example</groupId>
-	<artifactId>inventorymanger</artifactId>
+	<artifactId>inventorymanager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>inventorymanger</name>
+	<name>inventorymanager</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -301,18 +301,18 @@
 				</executions>
 				<configuration>
 					<targetClasses>
-						<param>com.example.inventorymanger.*.*</param>
+						<param>com.example.inventorymanager.*.*</param>
 					</targetClasses>
 					<targetTests>
-						<param>com.example.inventorymanger.*.*</param>
+						<param>com.example.inventorymanager.*.*</param>
 					</targetTests>
 					<excludedClasses>
 						<param>
-							com.example.inventorymanger.repository.**</param>
+							com.example.inventorymanager.repository.**</param>
 						<param>
-							com.example.inventorymanger.view.swing.**</param>
+							com.example.inventorymanager.view.swing.**</param>
 						<param>
-							com.example.inventorymanger.model.**</param>
+							com.example.inventorymanager.model.**</param>
 						<param>
 							com.example.inventorymanager.app.**</param>
 
@@ -326,9 +326,9 @@
 						<param>
 							com.example.inventorymanager.**E2E</param>
 						<param>
-							com.example.inventorymanger.repository.**</param>
+							com.example.inventorymanager.repository.**</param>
 						<param>
-							com.example.inventorymanger.view.swing.**</param>
+							com.example.inventorymanager.view.swing.**</param>
 						<param>
 							com.example.inventorymanager.controller.racecondition.**</param>
 					</excludedTestClasses>
