@@ -21,17 +21,20 @@ public class InventoryApplicationTest {
 
         try {
             InventoryApplication.main(new String[]{});
-            boolean frameFound = false;
-            for (int i = 0; i < 6 && !frameFound; i++) {
-                Thread.sleep(300);
+            long deadline = System.currentTimeMillis() + 2000; // 2s max wait
+            InventoryFrame found = null;
+            while (System.currentTimeMillis() < deadline && found == null) {
                 for (Frame frame : Frame.getFrames()) {
                     if (frame instanceof InventoryFrame) {
-                        frameFound = true;
-                        frame.dispose();
+                        found = (InventoryFrame) frame;
+                        break;
                     }
                 }
             }
-            assertTrue(frameFound);
+            assertTrue(found != null);
+            if (found != null) {
+                found.dispose();
+            }
         } finally {
             System.clearProperty("inventory.mongo.host");
             System.clearProperty("inventory.mongo.port");

@@ -145,8 +145,8 @@ public class ItemRepositoryTest {
         try {
             java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultPort");
             m.setAccessible(true);
-            int port = (int) m.invoke(null);
-            assertEquals(27017, port);
+            int fallbackPort = (int) m.invoke(null);
+            assertEquals(27017, fallbackPort);
         } finally {
             System.clearProperty("inventory.mongo.port");
         }
