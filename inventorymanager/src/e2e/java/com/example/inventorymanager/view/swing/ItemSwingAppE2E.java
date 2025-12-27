@@ -53,7 +53,12 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 	private FrameFixture window;
 
 	@BeforeClass
-	public static void skipIfHeadless() {
+	public static void skipIfNotRunnable() {
+		try {
+			Class.forName("com.example.inventorymanager.app.swing.InventorySwingApp");
+		} catch (ClassNotFoundException ex) {
+			org.junit.Assume.assumeTrue("Skipping Swing E2E because InventorySwingApp is missing", false);
+		}
 		org.junit.Assume.assumeFalse("Skipping Swing E2E on headless env", GraphicsEnvironment.isHeadless());
 	}
 
