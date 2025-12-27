@@ -75,6 +75,7 @@
 			**/view/swing/**,**/app/InventoryApplication.java,**/*Test*.java,**/*IT*.java,**/*E2E*.java
 		</sonar.coverage.exclusions>
 		<sonar.exclusions>**/view/swing/**</sonar.exclusions>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.reporting.outputDirectory}/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
 		<sonar.junit.reportPaths>
 			${project.build.directory}/surefire-reports,
