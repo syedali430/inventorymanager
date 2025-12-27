@@ -31,5 +31,5 @@ jobs:
 
       - name: Build with Maven
         run: xvfb-run mvn verify
-        working-directory: ./inventorymanager
+        working-directory: inventorymanager
 
