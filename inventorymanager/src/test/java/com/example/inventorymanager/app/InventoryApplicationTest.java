@@ -8,8 +8,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.awt.*;
 
-import static org.junit.Assert.assertTrue;
-
 public class InventoryApplicationTest {
 
     @Test
