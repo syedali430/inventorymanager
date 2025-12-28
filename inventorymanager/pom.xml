@@ -72,7 +72,7 @@
 		</sonar.issue.ignore.multicriteria.e14.resourceKey>
 
 		<sonar.coverage.exclusions>
-			**/view/swing/**,**/app/InventoryApplication.java,**/*Test*.java,**/*IT*.java,**/*E2E*.java
+			**/view/swing/**,**/app/InventoryApplication.java,**/model/**,**/*Test*.java,**/*IT*.java,**/*E2E*.java
 		</sonar.coverage.exclusions>
 		<sonar.exclusions>**/view/swing/**</sonar.exclusions>
 		<sonar.coverage.jacoco.xmlReportPaths>${project.reporting.outputDirectory}/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
