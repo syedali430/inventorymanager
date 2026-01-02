@@ -72,10 +72,9 @@
 		</sonar.issue.ignore.multicriteria.e14.resourceKey>
 
 		<sonar.coverage.exclusions>
-			**/view/swing/**,**/app/InventoryApplication.java,**/model/**,**/*Test*.java,**/*IT*.java,**/*E2E*.java
+			**/view/swing/**,**/app/InventoryApplication.java,**/*Test*.java,**/*IT*.java,**/*E2E*.java
 		</sonar.coverage.exclusions>
 		<sonar.exclusions>**/view/swing/**</sonar.exclusions>
-		<sonar.coverage.jacoco.xmlReportPaths>${project.reporting.outputDirectory}/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
 		<sonar.junit.reportPaths>
 			${project.build.directory}/surefire-reports,
@@ -296,40 +295,31 @@
 						<id>pitest</id>
 						<phase>test</phase>
 						<goals>
-					<goal>mutationCoverage</goal>
-				</goals>
-			</execution>
+							<goal>mutationCoverage</goal>
+						</goals>
+					</execution>
 				</executions>
 				<configuration>
 					<targetClasses>
-						<param>com.example.inventorymanager.model.*</param>
-						<param>com.example.inventorymanager.repository.*</param>
-						<param>com.example.inventorymanager.App</param>
+						<param>com.example.inventorymanager.*.*</param>
 					</targetClasses>
 					<targetTests>
-						<param>com.example.inventorymanager.*</param>
+						<param>com.example.inventorymanager.*.*</param>
 					</targetTests>
 					<excludedClasses>
-						<param>
-							com.example.inventorymanager.app.**</param>
-						<param>
-							com.example.inventorymanager.view.**</param>
-
+						<param>com.example.inventorymanager.repository.**</param>
+						<param>com.example.inventorymanager.view.swing.**</param>
+						<param>com.example.inventorymanager.model.**</param>
+						<param>com.example.inventorymanager.app.**</param>
 					</excludedClasses>
 					<excludedTestClasses>
-						<param>
-							com.example.inventorymanager.view.**</param>
-						<param>
-							com.example.inventorymanager.app.InventoryApplicationTest</param>
-						<param>
-							com.example.inventorymanager.*IT*</param>
-						<param>
-							com.example.inventorymanager.bdd.**</param>
-
-						<param>
-							com.example.inventorymanager.**E2E</param>
-						<param>
-							com.example.inventorymanager.controller.racecondition.**</param>
+						<param>com.example.inventorymanager.controller.**IT</param>
+						<param>com.example.inventorymanager.bdd.**</param>
+						<param>com.example.inventorymanager.**E2E</param>
+						<param>com.example.inventorymanager.app.**</param>
+						<param>com.example.inventorymanager.repository.**</param>
+						<param>com.example.inventorymanager.view.swing.**</param>
+						<param>com.example.inventorymanager.controller.racecondition.**</param>
 					</excludedTestClasses>
 					<mutators>
 						<mutator>DEFAULTS</mutator>
@@ -400,7 +390,6 @@
 					<excludes>
 						<exclude>**/com/example/inventorymanager/app/**</exclude>
 						<exclude>**/model/*.*</exclude>
-						<exclude>**/view/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -476,7 +465,6 @@
 							<excludes>
 								<exclude>**/model/*.*</exclude>
 								<exclude>**/com/example/inventorymanager/app/**</exclude>
-								<exclude>**/view/**</exclude>
 							</excludes>
 						</configuration>
 						<executions>
