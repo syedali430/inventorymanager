@@ -1,16 +1,19 @@
 package com.example.inventorymanager.view.swing;
 
+import com.example.inventorymanager.controller.ItemController;
 import com.example.inventorymanager.model.Item;
-import com.example.inventorymanager.repository.ItemRepository;
+import com.example.inventorymanager.view.InventoryView;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
-public class InventoryFrame extends JFrame {
+public class InventoryFrame extends JFrame implements InventoryView {
 
-    private final ItemRepository repository;
+    private final ItemController controller;
     private DefaultListModel<Item> listModel;
     private JList<Item> itemList;
 
@@ -22,8 +25,8 @@ public class InventoryFrame extends JFrame {
     private JButton updateButton;
     private JButton deleteButton;
 
-    public InventoryFrame(ItemRepository repository) {
-        this.repository = repository;
+    public InventoryFrame(ItemController controller) {
+        this.controller = controller;
 
         listModel = new DefaultListModel<>();
         itemList = new JList<>(listModel);
@@ -35,11 +38,6 @@ public class InventoryFrame extends JFrame {
         setLocationRelativeTo(null);
 
         initUI();
-
-        List<Item> existingItems = repository.findAll();
-        for (Item item : existingItems) {
-            SwingUtilities.invokeLater(() -> listModel.addElement(item));
-        }
 
         updateSelectionState();
     }
@@ -110,9 +108,10 @@ public class InventoryFrame extends JFrame {
         setContentPane(panel);
 
         // Enable addButton only if name, quantity, price fields are filled
-        nameField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
-        quantityField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
-        priceField.getDocument().addDocumentListener(new SimpleDocListener(this::updateAddButtonState));
+        DocumentListener docListener = new SimpleDocListener(this::updateAddButtonState);
+        nameField.getDocument().addDocumentListener(docListener);
+        quantityField.getDocument().addDocumentListener(docListener);
+        priceField.getDocument().addDocumentListener(docListener);
 
         // Sync detail fields + buttons on selection change
         itemList.addListSelectionListener(e -> {
@@ -123,11 +122,11 @@ public class InventoryFrame extends JFrame {
     }
 
     private void updateAddButtonState() {
-        boolean enabled = !nameField.getText().trim().isEmpty() &&
-                        !quantityField.getText().trim().isEmpty() &&
-                        !priceField.getText().trim().isEmpty() &&
-                        itemList.getSelectedIndex() == -1;
-        addButton.setEnabled(enabled);
+        boolean filled = !nameField.getText().trim().isEmpty()
+                && !quantityField.getText().trim().isEmpty()
+                && !priceField.getText().trim().isEmpty();
+        boolean selectable = itemList.getSelectedIndex() == -1;
+        addButton.setEnabled(filled && selectable);
     }
 
     private void updateSelectionState() {
@@ -150,7 +149,6 @@ public class InventoryFrame extends JFrame {
         }
     }
 
-
     private void onAddItem(ActionEvent e) {
         try {
             String name = nameField.getText().trim();
@@ -159,22 +157,21 @@ public class InventoryFrame extends JFrame {
             String desc = descField.getText().trim();
 
             if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Name is required!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            Item item = new Item(String.valueOf(System.currentTimeMillis()), name, quantity, price, desc);
-            repository.save(item);
-            listModel.addElement(item);
-
-            // Clear fields
-            itemList.clearSelection();
-            updateSelectionState();
-
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Name is required!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        Item item = new Item(String.valueOf(System.currentTimeMillis()), name, quantity, price, desc);
+        controller.addItem(item);
+
+        // Clear fields and selection for the next entry
+        itemList.clearSelection();
+        updateSelectionState();
+
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
     }
+}
 
     private void onUpdateItem(ActionEvent e) {
         Item selected = itemList.getSelectedValue();
@@ -187,25 +184,29 @@ public class InventoryFrame extends JFrame {
         JTextField quantityUpdate = new JTextField(String.valueOf(selected.getQuantity()));
         JTextField priceUpdate = new JTextField(String.valueOf(selected.getPrice()));
         JTextField descUpdate = new JTextField(selected.getDescription());
+        nameUpdate.setName("updateNameField");
+        quantityUpdate.setName("updateQuantityField");
+        priceUpdate.setName("updatePriceField");
+        descUpdate.setName("updateDescField");
 
         Object[] message = {
-            "Name:", nameUpdate,
-            "Quantity:", quantityUpdate,
-            "Price:", priceUpdate,
-            "Description:", descUpdate
+                "Name:", nameUpdate,
+                "Quantity:", quantityUpdate,
+                "Price:", priceUpdate,
+                "Description:", descUpdate
         };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Update Item", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
             try {
-                selected.setName(nameUpdate.getText().trim());
-                selected.setQuantity(Integer.parseInt(quantityUpdate.getText().trim()));
-                selected.setPrice(Double.parseDouble(priceUpdate.getText().trim()));
-                selected.setDescription(descUpdate.getText().trim());
-
-                repository.update(selected);
-                SwingUtilities.invokeLater(() -> itemList.repaint());
-
+                Item updated = new Item(
+                        selected.getId(),
+                        nameUpdate.getText().trim(),
+                        Integer.parseInt(quantityUpdate.getText().trim()),
+                        Double.parseDouble(priceUpdate.getText().trim()),
+                        descUpdate.getText().trim()
+                );
+                controller.updateItem(updated);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -220,9 +221,61 @@ public class InventoryFrame extends JFrame {
         }
 
         // Simplify delete: no confirmation dialog to keep tests deterministic
-        repository.delete(selected.getId());
-        listModel.removeElement(selected);
-        updateSelectionState();
+        controller.deleteItem(selected);
+    }
+
+    // InventoryView interface methods
+    @Override
+    public void displayItems(List<Item> items) {
+        SwingUtilities.invokeLater(() -> {
+            listModel.clear();
+            for (Item item : items) {
+                listModel.addElement(item);
+            }
+        });
+    }
+
+    @Override
+    public void addItem(Item item) {
+        SwingUtilities.invokeLater(() -> {
+            listModel.addElement(item);
+            itemList.clearSelection();
+            updateSelectionState();
+        });
+    }
+
+    @Override
+    public void updateItem(Item item) {
+        SwingUtilities.invokeLater(() -> {
+            for (int i = 0; i < listModel.size(); i++) {
+                Item current = listModel.get(i);
+                if (current.getId().equals(item.getId())) {
+                    listModel.set(i, item);
+                    break;
+                }
+            }
+            itemList.repaint();
+        });
+    }
+
+    @Override
+    public void deleteItem(Item item) {
+        SwingUtilities.invokeLater(() -> {
+            listModel.removeElement(item);
+            updateSelectionState();
+        });
+    }
+
+    @Override
+    public void showErrorMessage(String message, Item item) {
+        SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE)
+        );
+    }
+
+    // Method to expose listModel for testing
+    public DefaultListModel<Item> getListModel() {
+        return listModel;
     }
 
     // Simple helper for document listener
