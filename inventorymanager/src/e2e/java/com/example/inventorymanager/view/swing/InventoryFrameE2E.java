@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
 
+import com.example.inventorymanager.app.InventoryApplication;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
@@ -13,16 +17,21 @@ import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.example.inventorymanager.app.InventoryApplication;
-
 @RunWith(GUITestRunner.class)
 public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 
 	private FrameFixture window;
 	private InventoryFrame inventoryFrame;
+	private MongoServer mongoServer;
 
 	@Override
 	protected void onSetUp() throws Exception {
+		mongoServer = new MongoServer(new MemoryBackend());
+		mongoServer.bind("localhost", 0);
+		int port = mongoServer.getLocalAddress().getPort();
+		System.setProperty("inventory.mongo.host", "localhost");
+		System.setProperty("inventory.mongo.port", String.valueOf(port));
+
 		GuiActionRunner.execute(() -> {
 			inventoryFrame = new InventoryApplication().createFrame();
 			return inventoryFrame;
@@ -33,7 +42,14 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 
 	@Override
 	protected void onTearDown() throws Exception {
-		window.cleanUp();
+		if (window != null) {
+			window.cleanUp();
+		}
+		if (mongoServer != null) {
+			mongoServer.shutdownNow();
+		}
+		System.clearProperty("inventory.mongo.host");
+		System.clearProperty("inventory.mongo.port");
 	}
 
 	@Test @GUITest
