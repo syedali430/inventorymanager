@@ -42,12 +42,18 @@ public class ItemRepository {
         }
     }
 
+    private static final String FIELD_ID = "id";
+    private static final String FIELD_NAME = "name";
+    private static final String FIELD_QUANTITY = "quantity";
+    private static final String FIELD_PRICE = "price";
+    private static final String FIELD_DESCRIPTION = "description";
+
     public void save(Item item) {
-        Document doc = new Document("id", item.getId())
-                .append("name", item.getName())
-                .append("quantity", item.getQuantity())
-                .append("price", item.getPrice())
-                .append("description", item.getDescription());
+        Document doc = new Document(FIELD_ID, item.getId())
+                .append(FIELD_NAME, item.getName())
+                .append(FIELD_QUANTITY, item.getQuantity())
+                .append(FIELD_PRICE, item.getPrice())
+                .append(FIELD_DESCRIPTION, item.getDescription());
         collection.insertOne(doc);
     }
 
@@ -55,11 +61,11 @@ public class ItemRepository {
         List<Item> items = new ArrayList<>();
         for (Document doc : collection.find()) {
             Item item = new Item(
-                    doc.getString("id"),
-                    doc.getString("name"),
-                    doc.getInteger("quantity"),
-                    doc.getDouble("price"),
-                    doc.getString("description")
+                    doc.getString(FIELD_ID),
+                    doc.getString(FIELD_NAME),
+                    doc.getInteger(FIELD_QUANTITY),
+                    doc.getDouble(FIELD_PRICE),
+                    doc.getString(FIELD_DESCRIPTION)
             );
             items.add(item);
         }
@@ -67,30 +73,29 @@ public class ItemRepository {
     }
 
     public Optional<Item> findById(String id) {
-        Document doc = collection.find(new Document("id", id)).first();
+        Document doc = collection.find(new Document(FIELD_ID, id)).first();
         if (doc == null) return Optional.empty();
         Item item = new Item(
-                doc.getString("id"),
-                doc.getString("name"),
-                doc.getInteger("quantity"),
-                doc.getDouble("price"),
-                doc.getString("description")
+                doc.getString(FIELD_ID),
+                doc.getString(FIELD_NAME),
+                doc.getInteger(FIELD_QUANTITY),
+                doc.getDouble(FIELD_PRICE),
+                doc.getString(FIELD_DESCRIPTION)
         );
         return Optional.of(item);
     }
 
     public void update(Item item) {
         Document update = new Document("$set", new Document()
-                .append("name", item.getName())
-                .append("quantity", item.getQuantity())
-                .append("price", item.getPrice())
-                .append("description", item.getDescription()));
-        collection.updateOne(new Document("id", item.getId()), update);
+                .append(FIELD_NAME, item.getName())
+                .append(FIELD_QUANTITY, item.getQuantity())
+                .append(FIELD_PRICE, item.getPrice())
+                .append(FIELD_DESCRIPTION, item.getDescription()));
+        collection.updateOne(new Document(FIELD_ID, item.getId()), update);
     }
 
     public void delete(String id) {
-        collection.deleteOne(new Document("id", id));
+        collection.deleteOne(new Document(FIELD_ID, id));
     }
 }
-
 
