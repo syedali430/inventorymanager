@@ -37,5 +37,30 @@ public class Item {
     public String toString() {
         return name + " | " + quantity + " | $" + price;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return quantity == item.quantity
+                && Double.compare(item.price, price) == 0
+                && safeEquals(name, item.name)
+                && safeEquals(description, item.description);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + quantity;
+        long temp = Double.doubleToLongBits(price);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        return result;
+    }
+
+    private static boolean safeEquals(Object a, Object b) {
+        return a == null ? b == null : a.equals(b);
+    }
 }
 
