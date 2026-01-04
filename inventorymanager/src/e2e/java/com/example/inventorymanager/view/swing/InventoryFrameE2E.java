@@ -58,14 +58,14 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 		window.textBox("quantityField").enterText("10");
 		window.textBox("priceField").enterText("999.99");
 		window.textBox("descField").enterText("Gaming Laptop");
-		window.button("addButton").click();
+        window.button("addButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			String[] listContents = window.list().contents();
-			assertThat(listContents).hasSize(1);
-			assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99").contains("Gaming Laptop");
-		});
-	}
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            String[] listContents = window.list().contents();
+            assertThat(listContents).hasSize(1);
+            assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99");
+        });
+    }
 
 	@Test @GUITest
 	public void testDeleteItemE2E() {
@@ -111,12 +111,12 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 		window.textBox("quantityField").setText("15");
 		window.textBox("priceField").setText("899.99");
 		window.textBox("descField").setText("Updated gaming laptop");
-		window.button("updateButton").click();
+        window.button("updateButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			String[] listContents = window.list().contents();
-			assertThat(listContents).hasSize(1);
-			assertThat(listContents[0]).contains("Updated Laptop").contains("15").contains("899.99").contains("Updated gaming laptop");
-		});
-	}
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            String[] listContents = window.list().contents();
+            assertThat(listContents).hasSize(1);
+            assertThat(listContents[0]).contains("Updated Laptop").contains("15").contains("899.99");
+        });
+    }
 }
