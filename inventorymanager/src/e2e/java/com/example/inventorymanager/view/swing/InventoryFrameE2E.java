@@ -53,11 +53,11 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test @GUITest
-	public void testAddItemE2E() {
-		window.textBox("nameField").enterText("Laptop");
-		window.textBox("quantityField").enterText("10");
-		window.textBox("priceField").enterText("999.99");
-		window.textBox("descField").enterText("Gaming Laptop");
+    public void testAddItemE2E() {
+        window.textBox("nameField").enterText("Laptop");
+        window.textBox("quantityField").enterText("10");
+        window.textBox("priceField").enterText("999.99");
+        window.textBox("descField").enterText("Gaming Laptop");
         window.button("addButton").click();
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -110,8 +110,15 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 		window.textBox("nameField").setText("Updated Laptop");
 		window.textBox("quantityField").setText("15");
 		window.textBox("priceField").setText("899.99");
-		window.textBox("descField").setText("Updated gaming laptop");
+        window.textBox("descField").setText("Updated gaming laptop");
         window.button("updateButton").click();
+
+        org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
+        dialog.textBox("updateNameField").setText("Updated Laptop");
+        dialog.textBox("updateQuantityField").setText("15");
+        dialog.textBox("updatePriceField").setText("899.99");
+        dialog.textBox("updateDescField").setText("Updated gaming laptop");
+        dialog.button(org.assertj.swing.core.matcher.JButtonMatcher.withText("OK")).click();
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             String[] listContents = window.list().contents();
