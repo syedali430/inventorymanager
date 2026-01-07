@@ -215,7 +215,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    window.textBox("quantityField").enterText("7");
 	    window.textBox("priceField").enterText("1234.56");
 	    window.textBox("descField").enterText("Silent tower");
-	    window.button(JButtonMatcher.withText("Add Item")).click();
+	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
+	        .untilAsserted(() -> window.button("addButton").requireEnabled());
+	    window.button("addButton").click();
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 	        verify(itemController).addItem(new Item(String.valueOf(System.currentTimeMillis()), "Nebula Rig", 7, 1234.56, "Silent tower"));
 	    });
@@ -270,15 +272,17 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 	        window.list("itemList").requireSelection(1);
-	        window.button(JButtonMatcher.withText("Update Item")).requireEnabled();
+	        window.button("updateButton").requireEnabled();
 	    });
-	    window.button(JButtonMatcher.withText("Update Item")).click();
+	    window.button("updateButton").click();
 
 	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
+	    dialog.requireVisible();
 	    dialog.textBox("updateNameField").setText("Comet Desk");
 	    dialog.textBox("updateQuantityField").setText("15");
 	    dialog.textBox("updatePriceField").setText("699.99");
 	    dialog.textBox("updateDescField").setText("Updated slate");
+	    dialog.button(JButtonMatcher.withText("OK")).requireEnabled();
 	    dialog.button(JButtonMatcher.withText("OK")).click();
 
 	    Item updatedItem = new Item("2", "Comet Desk", 15, 699.99, "Updated slate");
