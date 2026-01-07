@@ -52,5 +52,19 @@ An inventory management system built in Java with MongoDB integration, providing
 
 ---
 
+## **Continuous Integration**
+- GitHub Actions builds on Linux, Windows, and macOS for cross-platform confidence.
+- CI runs `mvn verify` on Linux and `mvn test` on desktop runners.
+- Sonar analysis runs only when `SONAR_TOKEN` is present.
+
+---
+
+## **Docker**
+- Docker can be used to provide external services when needed (Mongo/Sonar).
+- Local `docker-compose.yml` is available for running SonarQube + Postgres.
+- CI skips Docker when no daemon is available.
+
+---
+
 ## **Acknowledgments**
 Thanks to **SonarCloud** and **Coveralls** for providing code quality and coverage analysis tools.
