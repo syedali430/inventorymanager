@@ -54,6 +54,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Override
 	protected void onTearDown() throws Exception {
+		if (window != null) {
+			window.cleanUp();
+		}
 		closeable.close();
 	}
 
@@ -154,8 +157,10 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    Item item = new Item("1", "Laptop", 10, 999.99, "High-end gaming laptop");
 	    inventoryFrame.showErrorMessage("error message", item);
 
-	    // Since showErrorMessage uses JOptionPane, we can't easily test the dialog with AssertJ Swing
-	    // This test would need to be adapted or use a different approach
+	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
+	        org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error")
+	    );
+	    dialog.button(JButtonMatcher.withText("OK")).click();
 	}
 
 	@Test
