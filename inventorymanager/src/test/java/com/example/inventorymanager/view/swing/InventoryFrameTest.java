@@ -263,6 +263,10 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	    window.list("itemList").selectItem(1);
 
+	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+	        window.list("itemList").requireSelection(1);
+	        window.button(JButtonMatcher.withText("Update Item")).requireEnabled();
+	    });
 	    window.button(JButtonMatcher.withText("Update Item")).click();
 
 	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
