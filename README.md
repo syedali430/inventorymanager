@@ -38,5 +38,19 @@ An inventory management system built in Java with MongoDB integration, providing
 
 ---
 
+## **Integration Tests**
+- Integration tests live under `inventorymanager/src/it/java` and run via Failsafe.
+- Embedded Mongo keeps DB state deterministic for repository and controller flows.
+- Use `mvn verify` to include them, or `-DskipITs` to skip.
+
+---
+
+## **End-to-End Tests**
+- AssertJ Swing drives the full UI workflow against the running application.
+- E2E tests live under `inventorymanager/src/e2e/java` and run in the integration phase.
+- Linux CI runs headless via `xvfb-run` to support GUI tests.
+
+---
+
 ## **Acknowledgments**
 Thanks to **SonarCloud** and **Coveralls** for providing code quality and coverage analysis tools.
