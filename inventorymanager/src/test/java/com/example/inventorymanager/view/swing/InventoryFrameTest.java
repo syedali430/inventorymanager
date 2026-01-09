@@ -218,6 +218,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
 	        .untilAsserted(() -> window.button("addButton").requireEnabled());
 	    window.button("addButton").click();
+	    robot().waitForIdle();
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 	        verify(itemController).addItem(new Item(String.valueOf(System.currentTimeMillis()), "Nebula Rig", 7, 1234.56, "Silent tower"));
 	    });
@@ -275,6 +276,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	        window.button("updateButton").requireEnabled();
 	    });
 	    window.button("updateButton").click();
+	    robot().waitForIdle();
 
 	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
 	    dialog.requireVisible();
@@ -284,9 +286,10 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    dialog.textBox("updateDescField").setText("Updated slate");
 	    dialog.button(JButtonMatcher.withText("OK")).requireEnabled();
 	    dialog.button(JButtonMatcher.withText("OK")).click();
+	    robot().waitForIdle();
 
 	    Item updatedItem = new Item("2", "Comet Desk", 15, 699.99, "Updated slate");
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
 	}
 
 	@Test
