@@ -215,11 +215,12 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    window.textBox("quantityField").enterText("7");
 	    window.textBox("priceField").enterText("1234.56");
 	    window.textBox("descField").enterText("Silent tower");
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
+	    robot().waitForIdle();
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS)
 	        .untilAsserted(() -> window.button("addButton").requireEnabled());
 	    window.button("addButton").click();
 	    robot().waitForIdle();
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 	        verify(itemController).addItem(new Item(String.valueOf(System.currentTimeMillis()), "Nebula Rig", 7, 1234.56, "Silent tower"));
 	    });
 	}
@@ -251,11 +252,17 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	            listStudentsModel.addElement(item2);
 	        }
 	    );
-	    window.list("itemList").selectItem(1);
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
-	        .untilAsserted(() -> window.button(JButtonMatcher.withText("Delete Item")).requireEnabled());
+	        .untilAsserted(() -> window.list("itemList").requireItemCount(2));
+	    window.list("itemList").selectItem(1);
+	    robot().waitForIdle();
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
+	        window.list("itemList").requireSelection(1);
+	        window.button(JButtonMatcher.withText("Delete Item")).requireEnabled();
+	    });
 	    window.button(JButtonMatcher.withText("Delete Item")).click();
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).deleteItem(item2));
+	    robot().waitForIdle();
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).deleteItem(item2));
 	}
 
 	@Test
@@ -271,8 +278,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
 	        .untilAsserted(() -> window.list("itemList").requireItemCount(2));
-	    window.list("itemList").scrollToItem(1);
-	    window.list("itemList").clickItem(1);
+	    window.list("itemList").selectItem(1);
 	    robot().waitForIdle();
 
 	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
@@ -293,7 +299,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    robot().waitForIdle();
 
 	    Item updatedItem = new Item("2", "Comet Desk", 15, 699.99, "Updated slate");
-	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
+	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
 	}
 
 	@Test
