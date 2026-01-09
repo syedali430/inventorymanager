@@ -89,6 +89,12 @@ An inventory management system built in Java with MongoDB integration, providing
 
 ---
 
+## **UI Tests**
+- UI tests use AssertJ Swing fixtures to exercise view behavior.
+- They validate button states, list selection, and field synchronization.
+
+---
+
 ## **End-to-End Tests**
 - AssertJ Swing drives the full UI workflow against the running application.
 - E2E tests live under `inventorymanager/src/e2e/java` and run in the integration phase.
@@ -107,6 +113,29 @@ An inventory management system built in Java with MongoDB integration, providing
 - Docker can be used to provide external services when needed (Mongo/Sonar).
 - Local `docker-compose.yml` is available for running SonarQube + Postgres.
 - CI skips Docker when no daemon is available.
+
+---
+
+## **Code Quality**
+- SonarCloud tracks bugs, code smells, and coverage trends.
+- CI keeps quality checks consistent across platforms.
+
+---
+
+## **Learning Tests**
+- Small experiments validate library behavior and assumptions.
+- Keep them isolated and focused on one question at a time.
+
+---
+
+## **Bibliography**
+- JUnit 4: https://junit.org/junit4/
+- AssertJ Swing: https://joel-costigliola.github.io/assertj/assertj-swing.html
+- Mockito: https://site.mockito.org/
+- Awaitility: https://github.com/awaitility/awaitility
+- PIT Mutation Testing: https://pitest.org/
+- Maven: https://maven.apache.org/
+- SonarCloud: https://sonarcloud.io/
 
 ---
 
