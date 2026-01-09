@@ -7,6 +7,24 @@ An inventory management system built in Java with MongoDB integration, providing
 
 ---
 
+## **About the Author**
+- Maintained by the repository owner with community contributions.
+- Focused on practical Java testing workflows and repeatable builds.
+
+---
+
+## **Introduction**
+- Inventory Manager is a small Java Swing app backed by MongoDB.
+- The codebase demonstrates TDD, CI, and automated testing practices.
+
+---
+
+## **Book Structure**
+- Sections map to real tooling in this repo: tests, build, CI, and quality gates.
+- Each topic points to the relevant configuration or test folder.
+
+---
+
 ## **Features**
 - **CRUD Operations** for inventory items
 - **MongoDB repository integration**
