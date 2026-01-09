@@ -27,11 +27,8 @@ public class InventoryApplication {
             e.printStackTrace();
         }
 
-        SwingUtilities.invokeLater(() -> {
-            InventoryApplication app = new InventoryApplication();
-            InventoryFrame frame = app.createFrame();
-            frame.setVisible(true);
-        });
+        SwingUtilities.invokeLater(
+            () -> new InventoryApplication().createFrame().setVisible(true)
+        );
     }
 }
-
