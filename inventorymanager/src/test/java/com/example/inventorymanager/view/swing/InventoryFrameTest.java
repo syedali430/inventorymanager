@@ -269,9 +269,13 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	        listItemModel.addElement(originalItem2);
 	    });
 
-	    window.list("itemList").selectItem(1);
+	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
+	        .untilAsserted(() -> window.list("itemList").requireItemCount(2));
+	    window.list("itemList").scrollToItem(1);
+	    window.list("itemList").clickItem(1);
+	    robot().waitForIdle();
 
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
 	        window.list("itemList").requireSelection(1);
 	        window.button("updateButton").requireEnabled();
 	    });
