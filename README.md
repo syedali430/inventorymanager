@@ -42,6 +42,13 @@ An inventory management system built in Java with MongoDB integration, providing
 
 ---
 
+## **Eclipse**
+- Import the repo as an Existing Maven Project to pick up classpath settings.
+- Use JDK 8 for source/target compatibility.
+- `.project` and `.classpath` are checked in for convenience.
+
+---
+
 ## **JUnit & TDD**
 - JUnit 4.13 drives the red-green-refactor loop for controllers, repos, and UI.
 - Tests mock controllers where needed and hit embedded Mongo for integration confidence.
@@ -53,6 +60,25 @@ An inventory management system built in Java with MongoDB integration, providing
 - JaCoCo enforces minimum line coverage via Maven build rules.
 - SonarCloud reports coverage on CI; Coveralls can be enabled for external badges.
 - PIT mutation testing runs in the Maven lifecycle to catch weak assertions and missing branches.
+
+---
+
+## **Maven**
+- `mvn test` runs unit tests; `mvn verify` runs integration and E2E suites.
+- Use profiles like `with-docker` or `skip-testcontainers` when needed.
+- `-DskipITs` and `-Ddocker.skip` help speed up local runs.
+
+---
+
+## **Mocking**
+- Mockito verifies controller interactions and isolates UI behavior.
+- Keep mocks at boundaries; rely on real components for integration tests.
+
+---
+
+## **Git**
+- Keep commits small, descriptive, and tied to a single topic.
+- Push frequently so CI validates each step.
 
 ---
 
