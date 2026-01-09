@@ -27,6 +27,7 @@
 		<picocli.version>4.6.1</picocli.version>
 		<awaitility.version>4.0.2</awaitility.version>
 		<sonar.version>3.8.0.2131</sonar.version>
+		<sonar.organization>syedali430</sonar.organization>
 		<org.codehaus.mojo.version>3.0.0</org.codehaus.mojo.version>
 		<surefire.version>3.0.0-M5</surefire.version>
 		<coveralls.version>4.3.0</coveralls.version>
