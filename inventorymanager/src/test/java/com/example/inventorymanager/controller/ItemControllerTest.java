@@ -13,7 +13,6 @@ import static java.util.Arrays.asList;
 
 import org.junit.After;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
