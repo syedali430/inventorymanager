@@ -48,7 +48,7 @@ public class ItemTest {
         Item item1 = new Item("1", "Laptop", 10, 999.99, "Gaming");
         Item item2 = new Item("2", "Laptop", 10, 999.99, "Gaming");
 
-        assertTrue(item1.equals(item1));
+        assertEquals(item1, item1);
         assertEquals(item1, item2);
         assertEquals(item1.hashCode(), item2.hashCode());
 
@@ -67,7 +67,7 @@ public class ItemTest {
 
         assertEquals(item1, item2);
         assertEquals(item1.hashCode(), item2.hashCode());
-        assertFalse(item1.equals(new Item("2", "Name", 1, 1.0, null)));
-        assertFalse(item1.equals(new Item("2", null, 1, 1.0, "Desc")));
+        assertNotEquals(item1, new Item("2", "Name", 1, 1.0, null));
+        assertNotEquals(item1, new Item("2", null, 1, 1.0, "Desc"));
     }
 }
