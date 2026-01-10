@@ -1,6 +1,7 @@
 package com.example.inventorymanager.view.swing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
@@ -63,6 +64,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test @GUITest
 	public void testInitialState() {
+	    assertNotNull(inventoryFrame);
 	    // Ensure buttons are initially disabled
 	    window.button("addButton").requireDisabled();
 	    window.button("updateButton").requireDisabled();
@@ -77,6 +79,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test @GUITest
 	public void testEnableAddButtonOnValidInput() {
+	    assertNotNull(window);
 	    // Enter valid inputs
 	    window.textBox("nameField").enterText("Nebula Rig");
 	    window.textBox("quantityField").enterText("7");
