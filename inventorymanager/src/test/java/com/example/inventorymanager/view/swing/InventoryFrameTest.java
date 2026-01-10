@@ -93,6 +93,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	@Test @GUITest
 	public void testWhenAnyInputIsEmptyAddButtonShouldBeDisabled()
 	{
+	    assertNotNull(window);
 		JTextComponentFixture nameField =  window.textBox("nameField");
 		JTextComponentFixture quantityField =  window.textBox("quantityField");
 		JTextComponentFixture priceField =  window.textBox("priceField");
@@ -163,6 +164,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
 	        org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error")
 	    );
+	    assertNotNull(dialog);
 	    dialog.button(JButtonMatcher.withText("OK")).click();
 	}
 
@@ -230,6 +232,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testAddButtonShouldBeDisabledWhenAllFieldsAreFilledButItemIsSelected() {
+	    assertNotNull(window);
 	    Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 	    GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
 
