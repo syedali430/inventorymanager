@@ -310,6 +310,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testAddButtonShouldBeDisabledWhenItemIsSelected() {
+	    assertNotNull(window);
 	    Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 	    GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
 
@@ -321,6 +322,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testAddButtonShouldBeEnabledWhenFieldsAreFilledAndNoItemIsSelected() {
+	    assertNotNull(window);
 	    // Ensure no item is selected
 	    window.list("itemList").clearSelection();
 
