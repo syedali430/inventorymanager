@@ -394,7 +394,6 @@
 				<configuration>
 					<excludes>
 						<exclude>**/com/example/inventorymanager/app/**</exclude>
-						<exclude>**/model/*.*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -476,7 +475,6 @@
 						<version>0.8.5</version>
 						<configuration>
 							<excludes>
-								<exclude>**/model/*.*</exclude>
 								<exclude>**/com/example/inventorymanager/app/**</exclude>
 							</excludes>
 						</configuration>
