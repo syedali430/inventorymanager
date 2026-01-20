@@ -19,6 +19,7 @@ import org.junit.runner.RunWith;
 import com.example.inventorymanager.controller.ItemController;
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepository;
+import com.example.inventorymanager.repository.ItemRepositoryInterface;
 
 @RunWith(GUITestRunner.class)
 public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
@@ -26,21 +27,20 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 	private FrameFixture window;
 	private InventoryFrame inventoryFrame;
 	private ItemController itemController;
-	private ItemRepository itemRepository;
+	private ItemRepositoryInterface itemRepository;
 
 	@Override
 	protected void onSetUp() throws Exception {
-		itemRepository = new ItemRepository();
-		// Clear repository
+		itemRepository = ItemRepository.createDefault();
+
 		for (Item item : itemRepository.findAll()) {
 			itemRepository.delete(item.getId());
 		}
 
-		itemController = new ItemController(itemRepository);
-
 		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryFrame(itemController);
-			itemController.setView(inventoryFrame);
+			inventoryFrame = new InventoryFrame();
+			itemController = new ItemController(itemRepository, inventoryFrame);
+			inventoryFrame.setController(itemController);
 			return inventoryFrame;
 		});
 		window = new FrameFixture(robot(), inventoryFrame);
@@ -49,22 +49,23 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 
 	@Test @GUITest
 	public void testOnStartAllItemsAreLoaded() {
-		// Add some items to repository
+
 		Item item1 = new Item("1", "Laptop", 10, 999.99, "High-end gaming laptop");
 		Item item2 = new Item("2", "Mouse", 5, 29.99, "Wireless mouse");
 		itemRepository.save(item1);
 		itemRepository.save(item2);
 
-		// Create new frame to trigger loading
+
 		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryFrame(itemController);
-			itemController.setView(inventoryFrame);
+			inventoryFrame = new InventoryFrame();
+			itemController = new ItemController(itemRepository, inventoryFrame);
+			inventoryFrame.setController(itemController);
 			return inventoryFrame;
 		});
 		window = new FrameFixture(robot(), inventoryFrame);
 		window.show();
 
-		// Wait for items to be loaded
+
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).containsExactly(item1.toString(), item2.toString());
@@ -82,14 +83,14 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).hasSize(1);
-			// The item ID is generated with timestamp, so we just check it contains the expected data
+
 			assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99").contains("Gaming Laptop");
 		});
 	}
 
 	@Test @GUITest
 	public void testDeleteItem() {
-		// First add an item
+
 		window.textBox("nameField").enterText("Laptop");
 		window.textBox("quantityField").enterText("10");
 		window.textBox("priceField").enterText("999.99");
@@ -101,7 +102,7 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 			assertThat(listContents).hasSize(1);
 		});
 
-		// Select and delete the item
+
 		window.list("itemList").selectItem(0);
 		window.button("deleteButton").click();
 
@@ -113,7 +114,7 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 
 	@Test @GUITest
 	public void testUpdateItem() {
-		// First add an item
+
 		window.textBox("nameField").enterText("Laptop");
 		window.textBox("quantityField").enterText("10");
 		window.textBox("priceField").enterText("999.99");
@@ -125,7 +126,7 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 			assertThat(listContents).hasSize(1);
 		});
 
-		// Select the item and update it
+
 		window.list("itemList").selectItem(0);
 		window.textBox("nameField").setText("Updated Laptop");
 		window.textBox("quantityField").setText("15");

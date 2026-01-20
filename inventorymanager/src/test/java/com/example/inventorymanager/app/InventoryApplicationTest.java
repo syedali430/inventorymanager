@@ -15,12 +15,15 @@ public class InventoryApplicationTest {
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
-        System.setProperty("inventory.mongo.host", "localhost");
-        System.setProperty("inventory.mongo.port", String.valueOf(port));
 
         try {
-            InventoryApplication.main(new String[]{});
-            long deadline = System.currentTimeMillis() + 2000; // 2s max wait
+            InventoryApplication.main(new String[]{
+                    "--mongo-host=localhost",
+                    "--mongo-port=" + port,
+                    "--db-name=inventorydb",
+                    "--db-collection=items"
+            });
+            long deadline = System.currentTimeMillis() + 2000;
             InventoryFrame found = null;
             while (System.currentTimeMillis() < deadline && found == null) {
                 for (Frame frame : Frame.getFrames()) {
@@ -35,9 +38,34 @@ public class InventoryApplicationTest {
                 found.dispose();
             }
         } finally {
+            mongoServer.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testCreateFrameUsesDefaults() {
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        System.setProperty("inventory.mongo.host", "localhost");
+        System.setProperty("inventory.mongo.port", String.valueOf(port));
+        try {
+            InventoryApplication app = new InventoryApplication();
+            InventoryFrame frame = app.createFrame();
+            assertNotNull(frame);
+            frame.dispose();
+        } finally {
             System.clearProperty("inventory.mongo.host");
             System.clearProperty("inventory.mongo.port");
             mongoServer.shutdownNow();
         }
+    }
+
+    @Test
+    public void testApplyLookAndFeelReturnsFalseOnInvalidClass() {
+        InventoryApplication app = new InventoryApplication();
+        boolean applied = app.applyLookAndFeel("not.a.real.LookAndFeel");
+        assertNotNull(app);
+        org.junit.Assert.assertFalse(applied);
     }
 }

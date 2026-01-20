@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepository;
+import com.example.inventorymanager.repository.ItemRepositoryInterface;
 import com.example.inventorymanager.view.InventoryView;
 
 public class ItemControllerIT {
@@ -18,7 +19,7 @@ public class ItemControllerIT {
 	@Mock
 	private InventoryView inventoryView;
 
-	private ItemRepository itemRepository;
+	private ItemRepositoryInterface itemRepository;
 
 	private ItemController itemController;
 
@@ -28,13 +29,11 @@ public class ItemControllerIT {
 	public void setUp() {
 		closeable = MockitoAnnotations.openMocks(this);
 
-		itemRepository = new ItemRepository();
-		// explicit empty the database through the repository
+		itemRepository = ItemRepository.createDefault();
 		for (Item item : itemRepository.findAll()) {
 			itemRepository.delete(item.getId());
 		}
-		itemController = new ItemController(itemRepository);
-		itemController.setView(inventoryView);
+		itemController = new ItemController(itemRepository, inventoryView);
 	}
 
 	@After
