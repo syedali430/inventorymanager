@@ -193,12 +193,15 @@
 				</configuration>
 				<executions>
 					<execution>
-						<id>default-it</id>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
+								<id>default-it</id>
+								<goals>
+									<goal>integration-test</goal>
+									<goal>verify</goal>
+								</goals>
+								<configuration>
+									<testSourceDirectory>src/it/java</testSourceDirectory>
+								</configuration>
+							</execution>
 					<execution>
 						<id>e2e-tests</id>
 						<goals>
@@ -425,6 +428,22 @@
 					</execution>
 				</executions>
 			</plugin>
+				<plugin>
+						<artifactId>maven-surefire-report-plugin</artifactId>
+						<version>3.2.5</version>
+						<executions>
+							<execution>
+								<phase>test</phase>
+								<goals>
+									<goal>report-only</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<linkXRef>false</linkXRef>
+						</configuration>
+					</plugin>
+
 		</plugins>
 
 

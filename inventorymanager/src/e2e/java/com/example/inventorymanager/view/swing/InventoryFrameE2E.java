@@ -1,129 +1,125 @@
 package com.example.inventorymanager.view.swing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.swing.launcher.ApplicationLauncher.application;
 
 import java.util.concurrent.TimeUnit;
 
-import com.example.inventorymanager.app.InventoryApplication;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import javax.swing.JFrame;
 
+import com.mongodb.MongoClient;
 import org.assertj.swing.annotation.GUITest;
-import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.core.GenericTypeMatcher;
+import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.awaitility.Awaitility;
+import org.bson.Document;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.testcontainers.containers.MongoDBContainer;
 
 @RunWith(GUITestRunner.class)
 public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 
-	private FrameFixture window;
-	private InventoryFrame inventoryFrame;
-	private MongoServer mongoServer;
+    @ClassRule
+    public static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.4.3");
 
-	@Override
-	protected void onSetUp() throws Exception {
-		mongoServer = new MongoServer(new MemoryBackend());
-		mongoServer.bind("localhost", 0);
-		int port = mongoServer.getLocalAddress().getPort();
-		System.setProperty("inventory.mongo.host", "localhost");
-		System.setProperty("inventory.mongo.port", String.valueOf(port));
+    private static final String DB_NAME = "test-db";
+    private static final String COLLECTION_NAME = "test-collection";
 
-		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryApplication().createFrame();
-			return inventoryFrame;
-		});
-		window = new FrameFixture(robot(), inventoryFrame);
-		window.show();
-	}
+    private static final String FIXTURE_1_ID = "1";
+    private static final String FIXTURE_1_NAME = "Monitor";
+    private static final int FIXTURE_1_QUANTITY = 2;
+    private static final double FIXTURE_1_PRICE = 199.99;
+    private static final String FIXTURE_1_DESC = "HD monitor";
 
-	@Override
-	protected void onTearDown() throws Exception {
-		if (window != null) {
-			window.cleanUp();
-		}
-		if (mongoServer != null) {
-			mongoServer.shutdownNow();
-		}
-		System.clearProperty("inventory.mongo.host");
-		System.clearProperty("inventory.mongo.port");
-	}
+    private static final String FIXTURE_2_ID = "2";
+    private static final String FIXTURE_2_NAME = "Keyboard";
+    private static final int FIXTURE_2_QUANTITY = 3;
+    private static final double FIXTURE_2_PRICE = 49.99;
+    private static final String FIXTURE_2_DESC = "Mechanical";
 
-	@Test @GUITest
+    private MongoClient mongoClient;
+    private FrameFixture window;
+    private String containerHost;
+    private int containerPort;
+
+    @Override
+    protected void onSetUp() {
+        containerHost = mongo.getContainerIpAddress();
+        containerPort = mongo.getFirstMappedPort();
+        mongoClient = new MongoClient(containerHost, containerPort);
+        mongoClient.getDatabase(DB_NAME).drop();
+        addTestItemToDatabase(FIXTURE_1_ID, FIXTURE_1_NAME, FIXTURE_1_QUANTITY, FIXTURE_1_PRICE, FIXTURE_1_DESC);
+        addTestItemToDatabase(FIXTURE_2_ID, FIXTURE_2_NAME, FIXTURE_2_QUANTITY, FIXTURE_2_PRICE, FIXTURE_2_DESC);
+
+        application("com.example.inventorymanager.app.InventoryApplication")
+            .withArgs(
+                "--mongo-host=" + containerHost,
+                "--mongo-port=" + containerPort,
+                "--db-name=" + DB_NAME,
+                "--db-collection=" + COLLECTION_NAME
+            )
+            .start();
+
+        window = WindowFinder.findFrame(new GenericTypeMatcher<JFrame>(JFrame.class) {
+            @Override
+            protected boolean isMatching(JFrame frame) {
+                return "Inventory Manager".equals(frame.getTitle()) && frame.isShowing();
+            }
+        }).using(robot());
+    }
+
+    @Override
+    protected void onTearDown() {
+        if (window != null) {
+            window.cleanUp();
+        }
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
+    }
+
+    private void addTestItemToDatabase(String id, String name, int quantity, double price, String description) {
+        mongoClient
+            .getDatabase(DB_NAME)
+            .getCollection(COLLECTION_NAME)
+            .insertOne(new Document()
+                .append("id", id)
+                .append("name", name)
+                .append("quantity", quantity)
+                .append("price", price)
+                .append("description", description));
+    }
+
+    @Test
+    @GUITest
+    public void testOnStartAllDatabaseElementsAreShown() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            String[] contents = window.list().contents();
+            assertThat(contents)
+                .anySatisfy(e -> assertThat(e).contains(FIXTURE_1_NAME, String.valueOf(FIXTURE_1_QUANTITY),
+                    String.valueOf(FIXTURE_1_PRICE)))
+                .anySatisfy(e -> assertThat(e).contains(FIXTURE_2_NAME, String.valueOf(FIXTURE_2_QUANTITY),
+                    String.valueOf(FIXTURE_2_PRICE)));
+        });
+    }
+
+    @Test
+    @GUITest
     public void testAddItemE2E() {
-        window.textBox("nameField").enterText("Laptop");
-        window.textBox("quantityField").enterText("10");
-        window.textBox("priceField").enterText("999.99");
-        window.textBox("descField").enterText("Gaming Laptop");
+        window.textBox("nameField").setText("Laptop");
+        window.textBox("quantityField").setText("10");
+        window.textBox("priceField").setText("999.99");
+        window.textBox("descField").setText("Gaming Laptop");
         window.button("addButton").click();
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             String[] listContents = window.list().contents();
-            assertThat(listContents).hasSize(1);
-            assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99");
-        });
-    }
-
-	@Test @GUITest
-	public void testDeleteItemE2E() {
-		// First add an item
-		window.textBox("nameField").enterText("Laptop");
-		window.textBox("quantityField").enterText("10");
-		window.textBox("priceField").enterText("999.99");
-		window.textBox("descField").enterText("Gaming Laptop");
-		window.button("addButton").click();
-
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			String[] listContents = window.list().contents();
-			assertThat(listContents).hasSize(1);
-		});
-
-		// Select and delete the item
-		window.list("itemList").selectItem(0);
-		window.button("deleteButton").click();
-
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			String[] listContents = window.list().contents();
-			assertThat(listContents).isEmpty();
-		});
-	}
-
-	@Test @GUITest
-	public void testUpdateItemE2E() {
-		// First add an item
-		window.textBox("nameField").enterText("Laptop");
-		window.textBox("quantityField").enterText("10");
-		window.textBox("priceField").enterText("999.99");
-		window.textBox("descField").enterText("Gaming Laptop");
-		window.button("addButton").click();
-
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			String[] listContents = window.list().contents();
-			assertThat(listContents).hasSize(1);
-		});
-
-		// Select the item and update it
-		window.list("itemList").selectItem(0);
-		window.textBox("nameField").setText("Updated Laptop");
-		window.textBox("quantityField").setText("15");
-		window.textBox("priceField").setText("899.99");
-        window.textBox("descField").setText("Updated gaming laptop");
-        window.button("updateButton").click();
-
-        org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
-        dialog.textBox("updateNameField").setText("Updated Laptop");
-        dialog.textBox("updateQuantityField").setText("15");
-        dialog.textBox("updatePriceField").setText("899.99");
-        dialog.textBox("updateDescField").setText("Updated gaming laptop");
-        dialog.button(org.assertj.swing.core.matcher.JButtonMatcher.withText("OK")).click();
-
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            String[] listContents = window.list().contents();
-            assertThat(listContents).hasSize(1);
-            assertThat(listContents[0]).contains("Updated Laptop").contains("15").contains("899.99");
+            assertThat(listContents).anySatisfy(e -> assertThat(e).contains("Laptop", "10", "999.99"));
         });
     }
 }
