@@ -37,7 +37,7 @@ public class ItemRepositoryIT {
     }
 
     private ItemRepository newRepo() {
-        return new ItemRepository("localhost", port);
+        return ItemRepository.create("localhost", port, "inventorydb", "items");
     }
 
     @Test

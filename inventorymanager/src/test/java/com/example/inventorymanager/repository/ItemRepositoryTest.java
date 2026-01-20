@@ -22,7 +22,7 @@ public class ItemRepositoryTest {
         port = mongoServer.getLocalAddress().getPort();
     }
 
-    @AfterClass
+    @AfterClass 
     public static void stopMongo() {
         if (mongoServer != null) {
             mongoServer.shutdownNow();
@@ -37,7 +37,7 @@ public class ItemRepositoryTest {
     }
 
     private ItemRepository newRepo() {
-        return new ItemRepository("localhost", port);
+        return ItemRepository.create("localhost", port, "inventorydb", "items");
     }
 
     @Test
@@ -66,7 +66,7 @@ public class ItemRepositoryTest {
         System.setProperty("inventory.mongo.host", "localhost");
         System.setProperty("inventory.mongo.port", String.valueOf(customPort));
         try {
-            ItemRepository repo = new ItemRepository();
+            ItemRepository repo = ItemRepository.createDefault();
             repo.save(new Item("def", "default", 1, 1.0, "d"));
             assertEquals(1, repo.findAll().size());
         } finally {
@@ -74,6 +74,25 @@ public class ItemRepositoryTest {
             System.clearProperty("inventory.mongo.port");
             localServer.shutdownNow();
         }
+    }
+
+    @Test
+    public void testConstructorUsesDefaultDatabaseAndCollection() {
+        MongoClient client = new MongoClient("localhost", port);
+        try {
+            ItemRepository repo = new ItemRepository(client);
+            repo.save(new Item("ctor", "default", 1, 1.0, "d"));
+            assertEquals(1, repo.findAll().size());
+        } finally {
+            client.close();
+        }
+    }
+
+    @Test
+    public void testCreateUsesDefaultDatabaseAndCollection() {
+        ItemRepository repo = ItemRepository.create("localhost", port);
+        repo.save(new Item("factory", "default", 1, 1.0, "d"));
+        assertEquals(1, repo.findAll().size());
     }
 
     @Test
@@ -165,4 +184,3 @@ public class ItemRepositoryTest {
         }
     }
 }
-
