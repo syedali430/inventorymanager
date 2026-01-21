@@ -23,6 +23,7 @@ import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -242,10 +243,16 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				.untilAsserted(() -> window.button("addButton").requireEnabled());
 		window.button("addButton").click();
 		robot().waitForIdle();
+		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
-			verify(itemController)
-					.addItem(new Item(String.valueOf(System.currentTimeMillis()), "Nebula Rig", 7, 1234.56, "Silent tower"));
+			verify(itemController).addItem(itemCaptor.capture());
 		});
+		Item added = itemCaptor.getValue();
+		assertThat(added.getId()).isNotBlank();
+		assertThat(added.getName()).isEqualTo("Nebula Rig");
+		assertThat(added.getQuantity()).isEqualTo(7);
+		assertThat(added.getPrice()).isEqualTo(1234.56);
+		assertThat(added.getDescription()).isEqualTo("Silent tower");
 	}
 
 	@Test
@@ -290,25 +297,23 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
-		try {
-			java.lang.reflect.Field listField = InventoryFrame.class.getDeclaredField("itemList");
-			listField.setAccessible(true);
-			javax.swing.JList<?> list = (javax.swing.JList<?>) listField.get(inventoryFrame);
-			GuiActionRunner.execute(() -> {
-				list.setSelectedIndex(1);
-				return null;
-			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		window.list("itemList").selectItem(1);
 		robot().waitForIdle();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			window.list("itemList").requireSelection(1);
-			window.button(JButtonMatcher.withText("Delete Item")).requireEnabled();
+			window.button("deleteButton").requireEnabled();
 		});
-		window.button(JButtonMatcher.withText("Delete Item")).click();
+		window.button("deleteButton").click();
 		robot().waitForIdle();
-		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).deleteItem(item2));
+		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+		Awaitility.await().atMost(8, TimeUnit.SECONDS)
+				.untilAsserted(() -> verify(itemController).deleteItem(itemCaptor.capture()));
+		Item deleted = itemCaptor.getValue();
+		assertThat(deleted.getId()).isEqualTo("2");
+		assertThat(deleted.getName()).isEqualTo("Aurora Tablet");
+		assertThat(deleted.getQuantity()).isEqualTo(6);
+		assertThat(deleted.getPrice()).isEqualTo(249.99);
+		assertThat(deleted.getDescription()).isEqualTo("Matte finish slate");
 	}
 
 	@Test

@@ -1,20 +1,24 @@
 package com.example.inventorymanager;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-import static org.junit.Assert.assertTrue;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import org.junit.Test;
 
 public class AppTest {
 
     @Test
-    public void testAppMainRunsWithoutException() {
-        App.main(new String[]{});
-        assertTrue(true);
-    }
-
-    @Test
-    public void testAppClassLoads() {
-        assertTrue(new App() instanceof App);
+    public void testMainDoesNotWriteToStdout() {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(captured));
+        try {
+            App.main(new String[]{});
+        } finally {
+            System.setOut(originalOut);
+        }
+        assertEquals("", captured.toString());
     }
 }
-

@@ -8,33 +8,6 @@ import org.junit.Test;
 public class ItemTest {
 
     @Test
-    public void testConstructorAndGetters() {
-        Item item = new Item("1", "Laptop", 10, 999.99, "Gaming");
-
-        assertEquals("1", item.getId());
-        assertEquals("Laptop", item.getName());
-        assertEquals(10, item.getQuantity());
-        assertEquals(999.99, item.getPrice(), 0.0);
-        assertEquals("Gaming", item.getDescription());
-    }
-
-    @Test
-    public void testSettersAndDefaultConstructor() {
-        Item item = new Item();
-        item.setId("2");
-        item.setName("Tablet");
-        item.setQuantity(3);
-        item.setPrice(249.5);
-        item.setDescription("Matte finish");
-
-        assertEquals("2", item.getId());
-        assertEquals("Tablet", item.getName());
-        assertEquals(3, item.getQuantity());
-        assertEquals(249.5, item.getPrice(), 0.0);
-        assertEquals("Matte finish", item.getDescription());
-    }
-
-    @Test
     public void testToStringFormatsFields() {
         Item item = new Item("3", "Chair", 2, 19.5, "Ergonomic");
 
@@ -43,7 +16,12 @@ public class ItemTest {
 
     @Test
     public void testEqualsAndHashCode() {
-        Item item1 = new Item("1", "Laptop", 10, 999.99, "Gaming");
+        Item item1 = new Item();
+        item1.setId("1");
+        item1.setName("Laptop");
+        item1.setQuantity(10);
+        item1.setPrice(999.99);
+        item1.setDescription("Gaming");
         Item item2 = new Item("2", "Laptop", 10, 999.99, "Gaming");
 
         assertEquals(item1, item1);

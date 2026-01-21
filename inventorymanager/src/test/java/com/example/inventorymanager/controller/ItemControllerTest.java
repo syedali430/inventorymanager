@@ -52,11 +52,12 @@ public class ItemControllerTest {
 
 	@Test
 	public void testGetAllItemsWithEmptyList() {
-	    when(itemRepository.findAll()).thenReturn(null);
+	    List<Item> items = java.util.Collections.emptyList();
+	    when(itemRepository.findAll()).thenReturn(items);
 
 	    itemController.getAllItems();
 
-	    verify(inventoryView).displayItems(null);
+	    verify(inventoryView).displayItems(items);
 	}
 
 
