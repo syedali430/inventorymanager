@@ -43,12 +43,14 @@ public class ItemRepository implements ItemRepositoryInterface {
         return new ItemRepository(new MongoClient(host, port), databaseName, collectionName);
     }
 
-    private static String defaultHost() {
-        return System.getProperty("inventory.mongo.host", "localhost");
+    static String defaultHost() {
+        return System.getProperty("mongo.host",
+                System.getProperty("inventory.mongo.host", "localhost"));
     }
 
-    private static int defaultPort() {
-        String port = System.getProperty("inventory.mongo.port", "27017");
+    static int defaultPort() {
+        String port = System.getProperty("mongo.port",
+                System.getProperty("inventory.mongo.port", "27017"));
         try {
             return Integer.parseInt(port);
         } catch (NumberFormatException e) {

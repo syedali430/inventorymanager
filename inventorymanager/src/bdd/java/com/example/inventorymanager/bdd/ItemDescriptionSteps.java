@@ -3,6 +3,7 @@ package com.example.inventorymanager.bdd;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.launcher.ApplicationLauncher.application;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JFrame;
@@ -15,7 +16,6 @@ import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.awaitility.Awaitility;
 import org.bson.Document;
-import org.testcontainers.containers.MongoDBContainer;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -25,26 +25,18 @@ import io.cucumber.java.en.When;
 
 public class ItemDescriptionSteps {
 
-    private static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.4.3");
-    private static final String DB_NAME = "bdd-db";
-    private static final String COLLECTION_NAME = "bdd-collection";
+    private static final String DB_NAME = "test-db";
+    private static final String COLLECTION_NAME = "test-collection";
 
     private MongoClient mongoClient;
     private Robot robot;
     private FrameFixture window;
-    private String containerHost;
-    private int containerPort;
 
     @Before
     public void setUp() {
-        if (!mongo.isRunning()) {
-            mongo.start();
-        }
-        containerHost = mongo.getContainerIpAddress();
-        containerPort = mongo.getFirstMappedPort();
-        mongoClient = new MongoClient(containerHost, containerPort);
+        mongoClient = new MongoClient(resolveHost(), resolvePort());
         mongoClient.getDatabase(DB_NAME).drop();
-        robot = BasicRobot.robotWithNewAwtHierarchy();
+        robot = BasicRobot.robotWithCurrentAwtHierarchy();
     }
 
     @After
@@ -60,25 +52,32 @@ public class ItemDescriptionSteps {
         }
     }
 
-    @Given("the database contains an item with id {string} name {string} quantity {int} price {double} description {string}")
-    public void theDatabaseContainsAnItem(String id, String name, int quantity, double price, String description) {
-        mongoClient
-            .getDatabase(DB_NAME)
-            .getCollection(COLLECTION_NAME)
-            .insertOne(new Document()
-                .append("id", id)
-                .append("name", name)
-                .append("quantity", quantity)
-                .append("price", price)
-                .append("description", description));
+    @Given("the database contains the items with the following values")
+    public void theDatabaseContainsItemsWithValues(List<List<String>> values) {
+        values.forEach(row -> {
+            String id = row.get(0).trim();
+            String name = row.get(1).trim();
+            int quantity = Integer.parseInt(row.get(2).trim());
+            double price = Double.parseDouble(row.get(3).trim());
+            String description = row.get(4).trim();
+            mongoClient
+                .getDatabase(DB_NAME)
+                .getCollection(COLLECTION_NAME)
+                .insertOne(new Document()
+                    .append("id", id)
+                    .append("name", name)
+                    .append("quantity", quantity)
+                    .append("price", price)
+                    .append("description", description));
+        });
     }
 
     @When("the Inventory Manager is shown")
     public void theInventoryManagerIsShown() {
         application("com.example.inventorymanager.app.InventoryApplication")
             .withArgs(
-                "--mongo-host=" + containerHost,
-                "--mongo-port=" + containerPort,
+                "--mongo-host=" + resolveHost(),
+                "--mongo-port=" + resolvePort(),
                 "--db-name=" + DB_NAME,
                 "--db-collection=" + COLLECTION_NAME
             )
@@ -92,13 +91,29 @@ public class ItemDescriptionSteps {
         }).using(robot);
     }
 
-    @Then("the list contains an element with name {string} quantity {int} price {double}")
-    public void theListContainsAnElement(String name, int quantity, double price) {
-        String quantityText = String.valueOf(quantity);
-        String priceText = String.valueOf(price);
+    @Then("the list contains elements with the following values")
+    public void theListContainsElementsWithValues(List<List<String>> values) {
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            assertThat(window.list().contents())
-                .anySatisfy(e -> assertThat(e).contains(name, quantityText, priceText));
+            String[] contents = window.list().contents();
+            values.forEach(row -> {
+                String name = row.get(0).trim();
+                String quantity = row.get(1).trim();
+                String price = row.get(2).trim();
+                assertThat(contents).anySatisfy(e -> assertThat(e).contains(name, quantity, price));
+            });
         });
+    }
+
+    private static String resolveHost() {
+        return System.getProperty("mongo.host", "localhost");
+    }
+
+    private static int resolvePort() {
+        String port = System.getProperty("mongo.port", "27017");
+        try {
+            return Integer.parseInt(port);
+        } catch (NumberFormatException e) {
+            return 27017;
+        }
     }
 }

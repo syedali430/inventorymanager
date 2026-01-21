@@ -47,16 +47,16 @@ public class InventoryApplicationTest {
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
-        System.setProperty("inventory.mongo.host", "localhost");
-        System.setProperty("inventory.mongo.port", String.valueOf(port));
+        System.setProperty("mongo.host", "localhost");
+        System.setProperty("mongo.port", String.valueOf(port));
         try {
             InventoryApplication app = new InventoryApplication();
             InventoryFrame frame = app.createFrame();
             assertNotNull(frame);
             frame.dispose();
         } finally {
-            System.clearProperty("inventory.mongo.host");
-            System.clearProperty("inventory.mongo.port");
+            System.clearProperty("mongo.host");
+            System.clearProperty("mongo.port");
             mongoServer.shutdownNow();
         }
     }

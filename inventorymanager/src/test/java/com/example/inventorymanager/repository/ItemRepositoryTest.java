@@ -41,7 +41,7 @@ public class ItemRepositoryTest {
     }
 
     @Test
-    public void testAddUpdateDelete() {
+    public void testSavePersistsItem() {
         ItemRepository repo = newRepo();
         Item item = new Item("1", "testItem", 5, 10.0, "Desc");
         repo.save(item);
@@ -49,10 +49,23 @@ public class ItemRepositoryTest {
         List<Item> items = repo.findAll();
         assertEquals(1, items.size());
         assertEquals("testItem", items.get(0).getName());
+    }
+
+    @Test
+    public void testUpdatePersistsChanges() {
+        ItemRepository repo = newRepo();
+        Item item = new Item("1", "testItem", 5, 10.0, "Desc");
+        repo.save(item);
 
         item.setName("UpdatedItem");
         repo.update(item);
         assertEquals("UpdatedItem", repo.findById("1").get().getName());
+    }
+
+    @Test
+    public void testDeleteRemovesItem() {
+        ItemRepository repo = newRepo();
+        repo.save(new Item("1", "testItem", 5, 10.0, "Desc"));
 
         repo.delete("1");
         assertTrue(repo.findAll().isEmpty());
@@ -63,15 +76,15 @@ public class ItemRepositoryTest {
         MongoServer localServer = new MongoServer(new MemoryBackend());
         localServer.bind("localhost", 0);
         int customPort = localServer.getLocalAddress().getPort();
-        System.setProperty("inventory.mongo.host", "localhost");
-        System.setProperty("inventory.mongo.port", String.valueOf(customPort));
+        System.setProperty("mongo.host", "localhost");
+        System.setProperty("mongo.port", String.valueOf(customPort));
         try {
             ItemRepository repo = ItemRepository.createDefault();
             repo.save(new Item("def", "default", 1, 1.0, "d"));
             assertEquals(1, repo.findAll().size());
         } finally {
-            System.clearProperty("inventory.mongo.host");
-            System.clearProperty("inventory.mongo.port");
+            System.clearProperty("mongo.host");
+            System.clearProperty("mongo.port");
             localServer.shutdownNow();
         }
     }
@@ -160,27 +173,23 @@ public class ItemRepositoryTest {
 
     @Test
     public void testDefaultPortFallsBackOnInvalidValue() throws Exception {
-        System.setProperty("inventory.mongo.port", "not-a-number");
+        System.setProperty("mongo.port", "not-a-number");
         try {
-            java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultPort");
-            m.setAccessible(true);
-            int fallbackPort = (int) m.invoke(null);
+            int fallbackPort = ItemRepository.defaultPort();
             assertEquals(27017, fallbackPort);
         } finally {
-            System.clearProperty("inventory.mongo.port");
+            System.clearProperty("mongo.port");
         }
     }
 
     @Test
     public void testDefaultHostUsesSystemProperty() throws Exception {
-        System.setProperty("inventory.mongo.host", "customhost");
+        System.setProperty("mongo.host", "customhost");
         try {
-            java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultHost");
-            m.setAccessible(true);
-            String host = (String) m.invoke(null);
+            String host = ItemRepository.defaultHost();
             assertEquals("customhost", host);
         } finally {
-            System.clearProperty("inventory.mongo.host");
+            System.clearProperty("mongo.host");
         }
     }
 }
