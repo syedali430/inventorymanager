@@ -47,7 +47,9 @@ public class InventoryApplicationTest {
         System.setProperty("mongo.port", String.valueOf(port));
         try {
             InventoryApplication app = new InventoryApplication();
-            InventoryFrame frame = GuiActionRunner.execute(app::createFrame);
+            InventoryFrame frame = GuiActionRunner.execute(
+                    (java.util.concurrent.Callable<InventoryFrame>) app::createFrame
+            );
             assertNotNull(frame);
             frame.dispose();
         } finally {
