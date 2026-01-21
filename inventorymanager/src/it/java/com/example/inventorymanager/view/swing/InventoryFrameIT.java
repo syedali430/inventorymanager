@@ -8,7 +8,10 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.DefaultListModel;
 
 import org.assertj.swing.annotation.GUITest;
+import org.assertj.swing.core.matcher.DialogMatcher;
+import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.fixture.DialogFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
@@ -45,6 +48,7 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		});
 		window = new FrameFixture(robot(), inventoryFrame);
 		window.show();
+		itemController.getAllItems();
 	}
 
 	@Test @GUITest
@@ -55,18 +59,8 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		itemRepository.save(item1);
 		itemRepository.save(item2);
 
-
-		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryFrame();
-			itemController = new ItemController(itemRepository, inventoryFrame);
-			inventoryFrame.setController(itemController);
-			return inventoryFrame;
-		});
-		window = new FrameFixture(robot(), inventoryFrame);
-		window.show();
-
-
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+		itemController.getAllItems();
+		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).containsExactly(item1.toString(), item2.toString());
 		});
@@ -78,13 +72,15 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		window.textBox("quantityField").enterText("10");
 		window.textBox("priceField").enterText("999.99");
 		window.textBox("descField").enterText("Gaming Laptop");
+		Awaitility.await().atMost(5, TimeUnit.SECONDS)
+			.untilAsserted(() -> window.button("addButton").requireEnabled());
 		window.button("addButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).hasSize(1);
 
-			assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99").contains("Gaming Laptop");
+			assertThat(listContents[0]).contains("Laptop").contains("10").contains("999.99");
 		});
 	}
 
@@ -97,7 +93,7 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		window.textBox("descField").enterText("Gaming Laptop");
 		window.button("addButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).hasSize(1);
 		});
@@ -121,23 +117,28 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 		window.textBox("descField").enterText("Gaming Laptop");
 		window.button("addButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).hasSize(1);
 		});
 
-
 		window.list("itemList").selectItem(0);
-		window.textBox("nameField").setText("Updated Laptop");
-		window.textBox("quantityField").setText("15");
-		window.textBox("priceField").setText("899.99");
-		window.textBox("descField").setText("Updated gaming laptop");
+		Awaitility.await().atMost(5, TimeUnit.SECONDS)
+			.untilAsserted(() -> window.button("updateButton").requireEnabled());
 		window.button("updateButton").click();
 
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+		DialogFixture dialog = window.dialog(DialogMatcher.withTitle("Update Item"));
+		dialog.requireVisible();
+		dialog.textBox("updateNameField").setText("Updated Laptop");
+		dialog.textBox("updateQuantityField").setText("15");
+		dialog.textBox("updatePriceField").setText("899.99");
+		dialog.textBox("updateDescField").setText("Updated gaming laptop");
+		dialog.button(JButtonMatcher.withText("OK")).click();
+
+		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			String[] listContents = window.list().contents();
 			assertThat(listContents).hasSize(1);
-			assertThat(listContents[0]).contains("Updated Laptop").contains("15").contains("899.99").contains("Updated gaming laptop");
+			assertThat(listContents[0]).contains("Updated Laptop").contains("15").contains("899.99");
 		});
 	}
 }

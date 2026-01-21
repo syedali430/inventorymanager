@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.MongoDBContainer;
 
 import com.example.inventorymanager.model.Item;
@@ -14,10 +17,23 @@ import com.mongodb.MongoClient;
 
 public class ItemRepositoryTestcontainersIT {
 
-    @ClassRule
-    public static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.4.3");
+    private static MongoDBContainer mongo;
 
     private ItemRepository repo;
+
+    @BeforeClass
+    public static void startMongo() {
+        Assume.assumeTrue("Docker not available", DockerClientFactory.instance().isDockerAvailable());
+        mongo = new MongoDBContainer("mongo:4.4.3");
+        mongo.start();
+    }
+
+    @AfterClass
+    public static void stopMongo() {
+        if (mongo != null) {
+            mongo.stop();
+        }
+    }
 
     @Before
     public void setUp() {

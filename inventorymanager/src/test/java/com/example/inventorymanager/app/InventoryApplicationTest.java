@@ -3,15 +3,21 @@ package com.example.inventorymanager.app;
 import com.example.inventorymanager.view.swing.InventoryFrame;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import org.awaitility.Awaitility;
+import org.assertj.swing.edt.GuiActionRunner;
+import org.junit.Assume;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 
 import java.awt.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class InventoryApplicationTest {
 
     @Test
     public void testMainLaunchesFrameUsingConfigurablePort() {
+        assumeGraphicsAvailable();
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
@@ -23,27 +29,17 @@ public class InventoryApplicationTest {
                     "--db-name=inventorydb",
                     "--db-collection=items"
             });
-            long deadline = System.currentTimeMillis() + 2000;
-            InventoryFrame found = null;
-            while (System.currentTimeMillis() < deadline && found == null) {
-                for (Frame frame : Frame.getFrames()) {
-                    if (frame instanceof InventoryFrame) {
-                        found = (InventoryFrame) frame;
-                        break;
-                    }
-                }
-            }
+            InventoryFrame found = awaitInventoryFrame();
             assertNotNull(found);
-            if (found != null) {
-                found.dispose();
-            }
         } finally {
+            disposeInventoryFrames();
             mongoServer.shutdownNow();
         }
     }
 
     @Test
     public void testCreateFrameUsesDefaults() {
+        assumeGraphicsAvailable();
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
         int port = mongoServer.getLocalAddress().getPort();
@@ -51,10 +47,11 @@ public class InventoryApplicationTest {
         System.setProperty("mongo.port", String.valueOf(port));
         try {
             InventoryApplication app = new InventoryApplication();
-            InventoryFrame frame = app.createFrame();
+            InventoryFrame frame = GuiActionRunner.execute(app::createFrame);
             assertNotNull(frame);
             frame.dispose();
         } finally {
+            disposeInventoryFrames();
             System.clearProperty("mongo.host");
             System.clearProperty("mongo.port");
             mongoServer.shutdownNow();
@@ -67,5 +64,36 @@ public class InventoryApplicationTest {
         boolean applied = app.applyLookAndFeel("not.a.real.LookAndFeel");
         assertNotNull(app);
         org.junit.Assert.assertFalse(applied);
+    }
+
+    private static void assumeGraphicsAvailable() {
+        Assume.assumeFalse("Headless environment", GraphicsEnvironment.isHeadless());
+    }
+
+    private static InventoryFrame awaitInventoryFrame() {
+        AtomicReference<InventoryFrame> ref = new AtomicReference<>();
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            InventoryFrame frame = findInventoryFrame();
+            assertNotNull(frame);
+            ref.set(frame);
+        });
+        return ref.get();
+    }
+
+    private static InventoryFrame findInventoryFrame() {
+        for (Frame frame : Frame.getFrames()) {
+            if (frame instanceof InventoryFrame) {
+                return (InventoryFrame) frame;
+            }
+        }
+        return null;
+    }
+
+    private static void disposeInventoryFrames() {
+        for (Frame frame : Frame.getFrames()) {
+            if (frame instanceof InventoryFrame) {
+                frame.dispose();
+            }
+        }
     }
 }
