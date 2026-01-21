@@ -14,6 +14,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      workdir: inventorymanager
 
     steps:
       - uses: actions/checkout@v4
@@ -35,15 +36,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml', '**/*.yml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
-        run: xvfb-run mvn -B verify -Dsonar.skip=true
-        working-directory: inventorymanager
-      - name: Coveralls
+        if: ${{ env.COVERALLS_REPO_TOKEN == '' }}
+        run: xvfb-run mvn -B verify -Pjacoco -Dsonar.skip=true
+        working-directory: ${{ env.workdir }}
+      - name: Build with Maven (coveralls)
         if: ${{ env.COVERALLS_REPO_TOKEN != '' }}
-        run: xvfb-run mvn -B -Pjacoco,coveralls verify -Dsonar.skip=true
-        working-directory: inventorymanager
+        run: xvfb-run mvn -B verify -Pcoveralls -Dsonar.skip=true
+        working-directory: ${{ env.workdir }}
       - name: SonarCloud Analysis
         if: ${{ env.SONAR_TOKEN != '' }}
         env:
@@ -52,4 +54,4 @@ jobs:
           xvfb-run mvn -B -DskipTests=true -Pjacoco sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.projectKey=syedali430_inventorymanager2
-        working-directory: inventorymanager
+        working-directory: ${{ env.workdir }}

@@ -1,35 +1,61 @@
-  name: Java CI with Maven in Linux
+name: Java CI with Maven in Linux
 
-  on:
-    push:
-    pull_request:
+on:
+  push:
+  pull_request:
 
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          java: [8]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - java: 8
+            coverage: true
+          - java: 11
+            coverage: false
 
-      name: Build with Java ${{ matrix.java }} on Linux
+    name: Build with Java ${{ matrix.java }} on Linux
+    env:
+      workdir: inventorymanager
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
-      steps:
-        - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v4
 
-        - name: Set up JDK ${{ matrix.java }}
-          uses: actions/setup-java@v1
-          with:
-            java-version: ${{ matrix.java }}
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
 
-        - name: Cache Maven packages
-          uses: actions/cache@v3
-          with:
-            path: ~/.m2
-            key: ${{ runner.os }}-m2-jdk${{ matrix.java }}-${{ hashFiles('**/pom.xml', '**/*.yml') }}
-            restore-keys: |
-              ${{ runner.os }}-m2-
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-jdk${{ matrix.java }}-${{ hashFiles('**/pom.xml', '**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-jdk${{ matrix.java }}-
+            ${{ runner.os }}-m2-
 
-        - name: Build with Maven and SonarCloud
-          run: xvfb-run mvn verify
-          working-directory: inventorymanager
+      - name: Build with Maven
+        if: ${{ !matrix.coverage || env.COVERALLS_REPO_TOKEN == '' }}
+        run: xvfb-run mvn -B verify
+        working-directory: ${{ env.workdir }}
 
+      - name: Build with Maven (coveralls)
+        if: ${{ matrix.coverage && env.COVERALLS_REPO_TOKEN != '' }}
+        run: xvfb-run mvn -B verify -Pcoveralls
+        working-directory: ${{ env.workdir }}
+
+      - name: Generate JUnit Report
+        if: ${{ always() }}
+        run: xvfb-run mvn -B surefire-report:report-only site:site -DgenerateReports=false
+        working-directory: ${{ env.workdir }}
+
+      - name: Archive JUnit Report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-report-jdk-${{ matrix.java }}
+          path: ${{ env.workdir }}/target/site

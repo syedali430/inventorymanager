@@ -31,6 +31,7 @@
 		<sonar.projectKey>syedali430_inventorymanager2</sonar.projectKey>
 		<org.codehaus.mojo.version>3.0.0</org.codehaus.mojo.version>
 		<surefire.version>3.0.0-M5</surefire.version>
+		<maven.site.version>3.9.1</maven.site.version>
 		<coveralls.version>4.3.0</coveralls.version>
 		<javax.xml.bind.version>2.3.1</javax.xml.bind.version>
 		<jacoco.verion>0.8.7</jacoco.verion>
@@ -384,21 +385,27 @@
 				</executions>
 			</plugin>
 
-				<plugin>
-						<artifactId>maven-surefire-report-plugin</artifactId>
-						<version>3.2.5</version>
-						<executions>
-							<execution>
-								<phase>test</phase>
-								<goals>
-									<goal>report-only</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<linkXRef>false</linkXRef>
-						</configuration>
-					</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>${maven.site.version}</version>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>3.2.5</version>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>report-only</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<linkXRef>false</linkXRef>
+				</configuration>
+			</plugin>
 
 		</plugins>
 
