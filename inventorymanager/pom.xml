@@ -28,6 +28,7 @@
 		<awaitility.version>4.0.2</awaitility.version>
 		<sonar.version>3.8.0.2131</sonar.version>
 		<sonar.organization>syedali430</sonar.organization>
+		<sonar.projectKey>syedali430_inventorymanager2</sonar.projectKey>
 		<org.codehaus.mojo.version>3.0.0</org.codehaus.mojo.version>
 		<surefire.version>3.0.0-M5</surefire.version>
 		<coveralls.version>4.3.0</coveralls.version>
@@ -48,7 +49,7 @@
 			java:S117
 		</sonar.issue.ignore.multicriteria.e11.ruleKey>
 		<sonar.issue.ignore.multicriteria.e11.resourceKey>
-			**/*SwingView.java
+			**/InventoryFrame.java
 		</sonar.issue.ignore.multicriteria.e11.resourceKey>
 		<!-- Disable rule for "Use static access with
 		"javax.swing.WindowConstants" -->
@@ -56,7 +57,7 @@
 			java:S3252
 		</sonar.issue.ignore.multicriteria.e12.ruleKey>
 		<sonar.issue.ignore.multicriteria.e12.resourceKey>
-			**/*SwingView.java
+			**/InventoryFrame.java
 		</sonar.issue.ignore.multicriteria.e12.resourceKey>
 		<!-- Disable rule for "Tests should include assertions": SonarQube is
 		not aware of AssertJ Swing -->
@@ -64,7 +65,7 @@
 			java:S2699
 		</sonar.issue.ignore.multicriteria.e13.ruleKey>
 		<sonar.issue.ignore.multicriteria.e13.resourceKey>
-			**/*SwingViewTest.java
+			**/InventoryFrameTest.java
 		</sonar.issue.ignore.multicriteria.e13.resourceKey>
 		<!-- Test classes should comply with a naming convention-->
 		<sonar.issue.ignore.multicriteria.e14.ruleKey>
@@ -75,9 +76,8 @@
 		</sonar.issue.ignore.multicriteria.e14.resourceKey>
 
 		<sonar.coverage.exclusions>
-			**/view/swing/**,**/app/InventoryApplication.java,**/*Test*.java,**/*IT*.java,**/*E2E*.java
+			**/*Test*.java,**/*IT*.java,**/*E2E*.java,**/*BDD*.java
 		</sonar.coverage.exclusions>
-		<sonar.exclusions>**/view/swing/**</sonar.exclusions>
 
 		<sonar.junit.reportPaths>
 			${project.build.directory}/surefire-reports,
@@ -139,6 +139,12 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mongodb</artifactId>
 			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>4.2.3</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -297,15 +303,6 @@
 				<groupId>org.pitest</groupId>
 				<artifactId>pitest-maven</artifactId>
 				<version>${pitest-maven-version}</version>
-				<executions>
-					<execution>
-						<id>pitest</id>
-						<phase>test</phase>
-						<goals>
-							<goal>mutationCoverage</goal>
-						</goals>
-					</execution>
-				</executions>
 				<configuration>
 					<targetClasses>
 						<param>com.example.inventorymanager.*.*</param>
@@ -314,19 +311,13 @@
 						<param>com.example.inventorymanager.*.*</param>
 					</targetTests>
 					<excludedClasses>
-						<param>com.example.inventorymanager.repository.**</param>
-						<param>com.example.inventorymanager.view.swing.**</param>
-						<param>com.example.inventorymanager.model.**</param>
-						<param>com.example.inventorymanager.app.**</param>
+						<param>com.example.inventorymanager.view.swing.*</param>
 					</excludedClasses>
 					<excludedTestClasses>
-						<param>com.example.inventorymanager.controller.**IT</param>
-						<param>com.example.inventorymanager.bdd.**</param>
-						<param>com.example.inventorymanager.**E2E</param>
-						<param>com.example.inventorymanager.app.**</param>
-						<param>com.example.inventorymanager.repository.**</param>
-						<param>com.example.inventorymanager.view.swing.**</param>
-						<param>com.example.inventorymanager.controller.racecondition.**</param>
+						<param>com.example.inventorymanager.*IT</param>
+						<param>com.example.inventorymanager.*E2E</param>
+						<param>com.example.inventorymanager.bdd.*</param>
+						<param>com.example.inventorymanager.view.swing.*</param>
 					</excludedTestClasses>
 					<mutators>
 						<mutator>DEFAULTS</mutator>
@@ -367,6 +358,10 @@
 								<ports>
 									<port>mongo.mapped.port:27017</port>
 								</ports>
+								<wait>
+									<log>Waiting for connections</log>
+									<time>10000</time>
+								</wait>
 							</run>
 						</image>
 					</images>
@@ -389,45 +384,6 @@
 				</executions>
 			</plugin>
 
-			<!-- JaCoCo Plugin for Code Coverage -->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.verion}</version>
-				<configuration>
-					<excludes>
-						<exclude>**/com/example/inventorymanager/app/**</exclude>
-					</excludes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-							<goal>report</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>jacoco-check</id>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<rule>
-									<element>PACKAGE</element>
-									<limits>
-										<limit>
-											<counter>LINE</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.50</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 				<plugin>
 						<artifactId>maven-surefire-report-plugin</artifactId>
 						<version>3.2.5</version>
@@ -491,18 +447,33 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.5</version>
-						<configuration>
-							<excludes>
-								<exclude>**/com/example/inventorymanager/app/**</exclude>
-							</excludes>
-						</configuration>
+						<version>${jacoco.verion}</version>
 						<executions>
 							<execution>
 								<goals>
 									<goal>prepare-agent</goal>
 									<goal>report</goal>
 								</goals>
+							</execution>
+							<execution>
+								<id>jacoco-check</id>
+								<goals>
+									<goal>check</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<rule>
+											<element>PACKAGE</element>
+											<limits>
+												<limit>
+													<counter>LINE</counter>
+													<value>COVEREDRATIO</value>
+													<minimum>0.50</minimum>
+												</limit>
+											</limits>
+										</rule>
+									</rules>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
