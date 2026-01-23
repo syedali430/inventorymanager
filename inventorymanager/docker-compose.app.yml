@@ -1,0 +1,13 @@
+version: "2"
+
+services:
+  app:
+    build: .
+    depends_on:
+      - mongodb
+    environment:
+      - JAVA_TOOL_OPTIONS=-Djava.awt.headless=true
+    command: ["--mongo-host", "mongodb", "--mongo-port", "27017", "--db-name", "inventorydb", "--db-collection", "items", "--headless"]
+
+  mongodb:
+    image: mongo:4.4.3

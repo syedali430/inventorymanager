@@ -1,11 +1,14 @@
 package com.example.inventorymanager.repository;
 
 import com.example.inventorymanager.model.Item;
+import com.example.inventorymanager.guice.MongoCollectionName;
+import com.example.inventorymanager.guice.MongoDbName;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +22,22 @@ public class ItemRepository implements ItemRepositoryInterface {
     private final MongoCollection<Document> collection;
     private final MongoClient client;
 
-    public ItemRepository(MongoClient client, String databaseName, String collectionName) {
+    @Inject
+    public ItemRepository(MongoClient client,
+                          @MongoDbName String databaseName,
+                          @MongoCollectionName String collectionName) {
         this.client = client;
         MongoDatabase database = client.getDatabase(databaseName);
         collection = database.getCollection(collectionName);
     }
 
-    public ItemRepository(MongoClient client) {
-        this(client, defaultDatabaseName(), defaultCollectionName());
-    }
-
     public static ItemRepository createDefault() {
         return new ItemRepository(new MongoClient(defaultHost(), defaultPort()),
                 defaultDatabaseName(), defaultCollectionName());
+    }
+
+    public static ItemRepository create(MongoClient client) {
+        return new ItemRepository(client, defaultDatabaseName(), defaultCollectionName());
     }
 
     public static ItemRepository create(String host, int port) {

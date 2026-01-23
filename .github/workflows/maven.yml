@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - java: 8
@@ -40,17 +41,17 @@ jobs:
 
       - name: Build with Maven
         if: ${{ !matrix.coverage || env.COVERALLS_REPO_TOKEN == '' }}
-        run: xvfb-run mvn -B verify
+        run: xvfb-run ./mvnw -B verify
         working-directory: ${{ env.workdir }}
 
       - name: Build with Maven (coveralls)
         if: ${{ matrix.coverage && env.COVERALLS_REPO_TOKEN != '' }}
-        run: xvfb-run mvn -B verify -Pcoveralls
+        run: xvfb-run ./mvnw -B verify -Pcoveralls
         working-directory: ${{ env.workdir }}
 
       - name: Generate JUnit Report
         if: ${{ always() }}
-        run: xvfb-run mvn -B surefire-report:report-only site:site -DgenerateReports=false
+        run: xvfb-run ./mvnw -B surefire-report:report-only site:site -DgenerateReports=false
         working-directory: ${{ env.workdir }}
 
       - name: Archive JUnit Report

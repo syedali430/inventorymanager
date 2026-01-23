@@ -3,13 +3,16 @@ package com.example.inventorymanager.controller;
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepositoryInterface;
 import com.example.inventorymanager.view.InventoryView;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 
 public class ItemController implements ItemControllerInterface {
 
     private final ItemRepositoryInterface itemRepository;
     private InventoryView inventoryView;
 
-    public ItemController(ItemRepositoryInterface itemRepository, InventoryView inventoryView) {
+    @Inject
+    public ItemController(ItemRepositoryInterface itemRepository, @Assisted InventoryView inventoryView) {
         this.itemRepository = itemRepository;
         this.inventoryView = inventoryView;
     }

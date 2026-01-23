@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import java.util.List;
 import static org.mockito.Mockito.*;
+import static org.junit.Assert.fail;
 
 import static java.util.Arrays.asList;
 
@@ -136,5 +137,36 @@ public class ItemControllerTest {
 		verifyNoMoreInteractions(ignoreStubs(itemRepository));
 	}
 
+	@Test
+	public void testAddItemWhenRepositoryThrowsShouldNotUpdateView() {
+		Item item = new Item("1", "Laptop", 10, 999.99, "High-end gaming laptop");
+		when(itemRepository.findById("1")).thenReturn(java.util.Optional.empty());
+		doThrow(new RuntimeException("db failure")).when(itemRepository).save(item);
+
+		try {
+			itemController.addItem(item);
+			fail("Expected RuntimeException");
+		} catch (RuntimeException ex) {
+			// expected
+		}
+
+		verify(inventoryView, never()).addItem(any(Item.class));
+	}
+
+	@Test
+	public void testUpdateItemWhenRepositoryThrowsShouldNotUpdateView() {
+		Item item = new Item("1", "Laptop", 10, 999.99, "High-end gaming laptop");
+		when(itemRepository.findById("1")).thenReturn(java.util.Optional.of(item));
+		doThrow(new RuntimeException("db failure")).when(itemRepository).update(item);
+
+		try {
+			itemController.updateItem(item);
+			fail("Expected RuntimeException");
+		} catch (RuntimeException ex) {
+			// expected
+		}
+
+		verify(inventoryView, never()).updateItem(any(Item.class));
+	}
 
 }

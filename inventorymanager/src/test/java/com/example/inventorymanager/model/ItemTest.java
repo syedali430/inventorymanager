@@ -46,4 +46,27 @@ public class ItemTest {
         assertNotEquals(item1, new Item("2", "Name", 1, 1.0, null));
         assertNotEquals(item1, new Item("2", null, 1, 1.0, "Desc"));
     }
+
+    @Test
+    public void testHashCodeMatchesExpectedForNonNullFields() {
+        Item item = new Item("1", "Laptop", 10, 999.99, "Gaming");
+
+        assertEquals(expectedHash("Laptop", 10, 999.99, "Gaming"), item.hashCode());
+    }
+
+    @Test
+    public void testHashCodeMatchesExpectedForNullFields() {
+        Item item = new Item("1", null, 1, 1.0, null);
+
+        assertEquals(expectedHash(null, 1, 1.0, null), item.hashCode());
+    }
+
+    private static int expectedHash(String name, int quantity, double price, String description) {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + quantity;
+        long temp = Double.doubleToLongBits(price);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        return result;
+    }
 }

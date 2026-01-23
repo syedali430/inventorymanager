@@ -9,50 +9,57 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
+import com.google.inject.Module;
 
 public class GuiceLearningTest {
 
-    interface Greeter {
-        String message();
+    static class MyService {
     }
 
-    static class HelloGreeter implements Greeter {
-        @Override
-        public String message() {
-            return "hello";
-        }
-    }
-
-    static class Client {
-        final Greeter greeter;
-        final String prefix;
+    static class MyClient {
+        final MyService service;
 
         @Inject
-        Client(Greeter greeter, @Named("prefix") String prefix) {
-            this.greeter = greeter;
-            this.prefix = prefix;
-        }
-
-        String greet() {
-            return prefix + greeter.message();
+        MyClient(MyService service) {
+            this.service = service;
         }
     }
 
-    static class TestModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(Greeter.class).to(HelloGreeter.class);
-            bind(String.class).annotatedWith(Names.named("prefix")).toInstance(">>");
+    interface IMyService {
+    }
+
+    static class MyConcreteService implements IMyService {
+    }
+
+    static class MyGenericClient {
+        final IMyService service;
+
+        @Inject
+        MyGenericClient(IMyService service) {
+            this.service = service;
         }
     }
 
     @Test
-    public void testInjectorProvidesDependencies() {
-        Injector injector = Guice.createInjector(new TestModule());
-        Client client = injector.getInstance(Client.class);
-        assertNotNull(client);
-        assertEquals(">>hello", client.greet());
+    public void canInstantiateConcreteClassesWithoutConfiguration() {
+        Module module = new AbstractModule() {
+        };
+        Injector injector = Guice.createInjector(module);
+        MyClient client = injector.getInstance(MyClient.class);
+        assertNotNull(client.service);
+    }
+
+    @Test
+    public void injectAbstractType() {
+        Module module = new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(IMyService.class).to(MyConcreteService.class);
+            }
+        };
+        Injector injector = Guice.createInjector(module);
+        MyGenericClient client = injector.getInstance(MyGenericClient.class);
+        assertNotNull(client.service);
+        assertEquals(MyConcreteService.class, client.service.getClass());
     }
 }

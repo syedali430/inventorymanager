@@ -45,6 +45,17 @@ public class InventoryFrame extends JFrame implements InventoryView {
         this.controller = controller;
     }
 
+    public ItemControllerInterface getController() {
+        return controller;
+    }
+
+    public void start() {
+        setVisible(true);
+        if (controller != null) {
+            controller.getAllItems();
+        }
+    }
+
     private void initUI() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

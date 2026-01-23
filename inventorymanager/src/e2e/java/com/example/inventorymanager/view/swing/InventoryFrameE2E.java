@@ -16,16 +16,18 @@ import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.awaitility.Awaitility;
 import org.bson.Document;
-import org.junit.ClassRule;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.MongoDBContainer;
 
 @RunWith(GUITestRunner.class)
 public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
 
-    @ClassRule
-    public static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.4.3");
+    private static MongoDBContainer mongo;
 
     private static final String DB_NAME = "test-db";
     private static final String COLLECTION_NAME = "test-collection";
@@ -47,9 +49,23 @@ public class InventoryFrameE2E extends AssertJSwingJUnitTestCase {
     private String containerHost;
     private int containerPort;
 
+    @BeforeClass
+    public static void startMongo() {
+        Assume.assumeTrue("Docker not available", DockerClientFactory.instance().isDockerAvailable());
+        mongo = new MongoDBContainer("mongo:4.4.3");
+        mongo.start();
+    }
+
+    @AfterClass
+    public static void stopMongo() {
+        if (mongo != null) {
+            mongo.stop();
+        }
+    }
+
     @Override
     protected void onSetUp() {
-        containerHost = mongo.getContainerIpAddress();
+        containerHost = mongo.getHost();
         containerPort = mongo.getFirstMappedPort();
         mongoClient = new MongoClient(containerHost, containerPort);
         mongoClient.getDatabase(DB_NAME).drop();
