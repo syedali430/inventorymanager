@@ -31,9 +31,9 @@ public class ItemRepositoryIT {
 
     @Before
     public void cleanDb() {
-        MongoClient client = new MongoClient("localhost", port);
-        client.getDatabase("inventorydb").drop();
-        client.close();
+        try (MongoClient client = new MongoClient("localhost", port)) {
+            client.getDatabase("inventorydb").drop();
+        }
     }
 
     private ItemRepository newRepo() {
@@ -92,13 +92,10 @@ public class ItemRepositoryIT {
 
     @Test
     public void testCreateWithMongoClientUsesDefaultDatabaseAndCollection() {
-        MongoClient client = new MongoClient("localhost", port);
-        try {
+        try (MongoClient client = new MongoClient("localhost", port)) {
             ItemRepository repo = ItemRepository.create(client);
             repo.save(new Item("ctor", "default", 1, 1.0, "d"));
             assertThat(repo.findAll()).hasSize(1);
-        } finally {
-            client.close();
         }
     }
 

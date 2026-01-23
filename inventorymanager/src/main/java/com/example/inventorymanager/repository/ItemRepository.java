@@ -3,7 +3,6 @@ package com.example.inventorymanager.repository;
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.guice.MongoCollectionName;
 import com.example.inventorymanager.guice.MongoDbName;
-import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -91,7 +90,9 @@ public class ItemRepository implements ItemRepositoryInterface {
     @Override
     public List<Item> findAll() {
         List<Item> items = new ArrayList<>();
-        collection.find().forEach((Block<Document>) doc -> items.add(toItem(doc)));
+        for (Document doc : collection.find()) {
+            items.add(toItem(doc));
+        }
         return items;
     }
 
