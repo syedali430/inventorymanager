@@ -368,21 +368,6 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.eluder.coveralls</groupId>
-				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>${coveralls.version}</version>
-				<dependencies>
-					<!-- This is required when using JDK 9 or higher
-						since javax.xml.bind has been removed from the JDK -->
-					<dependency>
-						<groupId>javax.xml.bind</groupId>
-						<artifactId>jaxb-api</artifactId>
-						<version>${javax.xml.bind.version}</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-
 			<!-- Docker Plugin -->
 			<plugin>
 				<groupId>io.fabric8</groupId>
