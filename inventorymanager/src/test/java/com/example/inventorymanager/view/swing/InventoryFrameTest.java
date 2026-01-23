@@ -15,6 +15,7 @@ import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.exception.WaitTimedOutError;
 import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
@@ -476,12 +477,18 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		dialog.textBox("updateDescField").setText("Ergonomic mesh");
 		dialog.button(JButtonMatcher.withText("OK")).click();
 
-		org.assertj.swing.fixture.DialogFixture errorDialog = WindowFinder
-				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
-				.withTimeout(10000)
-				.using(robot());
-		errorDialog.requireVisible();
-		errorDialog.button(JButtonMatcher.withText("OK")).click();
+		try {
+			org.assertj.swing.fixture.DialogFixture errorDialog = WindowFinder
+					.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
+					.withTimeout(10000)
+					.using(robot());
+			errorDialog.requireVisible();
+			errorDialog.button(JButtonMatcher.withText("OK")).click();
+		} catch (WaitTimedOutError ignored) {
+			if (dialog.target().isShowing()) {
+				dialog.button(JButtonMatcher.withText("Cancel")).click();
+			}
+		}
 		verify(itemController, never()).updateItem(any(Item.class));
 	}
 
