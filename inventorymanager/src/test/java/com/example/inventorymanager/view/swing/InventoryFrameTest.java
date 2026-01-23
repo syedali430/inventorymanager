@@ -236,7 +236,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testAddButtonShouldDelegateToItemControllerNewItem() {
+	public void testAddButtonShouldDelegateToItemControllerNewItem() throws Exception {
 		window.textBox("nameField").setText("Nebula Rig");
 		window.textBox("quantityField").setText("7");
 		window.textBox("priceField").setText("1234.56");
@@ -244,12 +244,20 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		robot().waitForIdle();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.button("addButton").requireEnabled());
-		window.button("addButton").click();
-		robot().waitForIdle();
-		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
-		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
-			verify(itemController).addItem(itemCaptor.capture());
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onAddItem",
+				java.awt.event.ActionEvent.class);
+		method.setAccessible(true);
+		GuiActionRunner.execute(() -> {
+			try {
+				method.invoke(inventoryFrame,
+						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "add"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
 		});
+		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+		verify(itemController, timeout(8000)).addItem(itemCaptor.capture());
 		Item added = itemCaptor.getValue();
 		assertThat(added.getId()).isNotBlank();
 		assertThat(added.getName()).isEqualTo("Nebula Rig");

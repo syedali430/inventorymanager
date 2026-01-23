@@ -44,7 +44,7 @@ jobs:
         working-directory: ${{ env.workdir }}
       - name: Build with Maven (coveralls)
         if: ${{ env.COVERALLS_REPO_TOKEN != '' }}
-        run: xvfb-run ./mvnw -B verify -Dcoveralls.token=${{ env.COVERALLS_REPO_TOKEN }} -Dsonar.skip=true
+        run: xvfb-run ./mvnw -B verify -Pjacoco -Dcoveralls.token=${{ env.COVERALLS_REPO_TOKEN }} -Dsonar.skip=true
         working-directory: ${{ env.workdir }}
       - name: SonarCloud Analysis
         if: ${{ env.SONAR_TOKEN != '' }}
