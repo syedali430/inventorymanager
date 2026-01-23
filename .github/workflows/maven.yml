@@ -46,7 +46,7 @@ jobs:
 
       - name: Build with Maven (coveralls)
         if: ${{ matrix.coverage && env.COVERALLS_REPO_TOKEN != '' }}
-        run: xvfb-run ./mvnw -B verify -Pcoveralls
+        run: xvfb-run ./mvnw -B verify -Dcoveralls.token=${{ env.COVERALLS_REPO_TOKEN }}
         working-directory: ${{ env.workdir }}
 
       - name: Generate JUnit Report

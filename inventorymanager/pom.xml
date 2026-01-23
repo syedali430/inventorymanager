@@ -527,6 +527,11 @@
 		</profile>
 		<profile>
 			<id>coveralls</id>
+			<activation>
+				<property>
+					<name>coveralls.token</name>
+				</property>
+			</activation>
 			<build>
 				<plugins>
 					<plugin>
@@ -540,6 +545,9 @@
 						<groupId>org.eluder.coveralls</groupId>
 						<artifactId>coveralls-maven-plugin</artifactId>
 						<version>${coveralls.version}</version>
+						<configuration>
+							<repoToken>${coveralls.token}</repoToken>
+						</configuration>
 						<dependencies>
 							<dependency>
 								<groupId>javax.xml.bind</groupId>
