@@ -15,7 +15,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<testcontainers.version>1.15.1</testcontainers.version>
+		<testcontainers.version>1.19.8</testcontainers.version>
 		<junit.version>4.13.2</junit.version>
 		<cucumber.version>5.5.0</cucumber.version>
 		<pitest-maven-version>1.5.2</pitest-maven-version>
@@ -35,8 +35,10 @@
 		<coveralls.version>4.3.0</coveralls.version>
 		<javax.xml.bind.version>2.3.1</javax.xml.bind.version>
 		<jacoco.verion>0.8.7</jacoco.verion>
+		<jacocoArgLine></jacocoArgLine>
 		<io.fabric8.version>0.40.2</io.fabric8.version>
 		<docker.skip>true</docker.skip>
+		<docker.skip.stop>false</docker.skip.stop>
 		<skipITs>true</skipITs>
 
 
@@ -207,6 +209,7 @@
 				<version>2.22.1</version>
 				<configuration>
 					<skipITs>${skipITs}</skipITs>
+					<argLine>${jacocoArgLine} ${surefire.argLine}</argLine>
 					<systemPropertyVariables>
 						<mongo.port>${mongo.mapped.port}</mongo.port>
 					</systemPropertyVariables>
@@ -306,6 +309,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire.version}</version>
 				<configuration>
+					<argLine>${jacocoArgLine} ${surefire.argLine}</argLine>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -404,6 +408,9 @@
 						<goals>
 							<goal>stop</goal>
 						</goals>
+						<configuration>
+							<skip>${docker.skip.stop}</skip>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -436,9 +443,20 @@
 	</build>
 	<profiles>
 		<profile>
+			<id>jdk9plus</id>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<properties>
+				<surefire.argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</surefire.argLine>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>with-docker</id>
 			<properties>
 				<docker.skip>false</docker.skip>
+				<docker.skip.stop>true</docker.skip.stop>
 				<skipITs>false</skipITs>
 			</properties>
 		</profile>
@@ -484,6 +502,9 @@
 								<goals>
 									<goal>prepare-agent</goal>
 								</goals>
+								<configuration>
+									<propertyName>jacocoArgLine</propertyName>
+								</configuration>
 							</execution>
 							<execution>
 								<id>jacoco-report</id>
