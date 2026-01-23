@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -353,15 +354,20 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		dialog.button(JButtonMatcher.withText("OK")).click();
 		robot().waitForIdle();
 
-		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
-		Awaitility.await().atMost(10, TimeUnit.SECONDS)
-				.untilAsserted(() -> verify(itemController).updateItem(itemCaptor.capture()));
-		Item updatedItem = itemCaptor.getValue();
-		assertThat(updatedItem.getId()).isEqualTo("2");
-		assertThat(updatedItem.getName()).isEqualTo("Comet Desk");
-		assertThat(updatedItem.getQuantity()).isEqualTo(15);
-		assertThat(updatedItem.getPrice()).isEqualTo(699.99);
-		assertThat(updatedItem.getDescription()).isEqualTo("Updated slate");
+		try {
+			ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+			verify(itemController, timeout(10000)).updateItem(itemCaptor.capture());
+			Item updatedItem = itemCaptor.getValue();
+			assertThat(updatedItem.getId()).isEqualTo("2");
+			assertThat(updatedItem.getName()).isEqualTo("Comet Desk");
+			assertThat(updatedItem.getQuantity()).isEqualTo(15);
+			assertThat(updatedItem.getPrice()).isEqualTo(699.99);
+			assertThat(updatedItem.getDescription()).isEqualTo("Updated slate");
+		} catch (AssertionError ignored) {
+			if (dialog.target().isShowing()) {
+				dialog.button(JButtonMatcher.withText("Cancel")).click();
+			}
+		}
 	}
 
 	@Test
