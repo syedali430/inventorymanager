@@ -495,13 +495,21 @@
 						<version>${jacoco.verion}</version>
 						<executions>
 							<execution>
+								<id>jacoco-prepare-agent</id>
 								<goals>
 									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>jacoco-report</id>
+								<phase>verify</phase>
+								<goals>
 									<goal>report</goal>
 								</goals>
 							</execution>
 							<execution>
 								<id>jacoco-check</id>
+								<phase>verify</phase>
 								<goals>
 									<goal>check</goal>
 								</goals>
@@ -547,6 +555,9 @@
 						<version>${coveralls.version}</version>
 						<configuration>
 							<repoToken>${coveralls.token}</repoToken>
+							<jacocoReports>
+								<param>${project.build.directory}/site/jacoco/jacoco.xml</param>
+							</jacocoReports>
 						</configuration>
 						<dependencies>
 							<dependency>
