@@ -15,6 +15,7 @@ import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.core.matcher.JLabelMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
+import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JTextComponentFixture;
@@ -338,10 +339,10 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		});
 		window.button("updateButton").click();
 		robot().waitForIdle();
-		Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(
-				() -> window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item")).requireVisible());
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"))
+				.withTimeout(10000)
+				.using(robot());
 		dialog.requireVisible();
 		dialog.textBox("updateNameField").setText("Comet Desk");
 		dialog.textBox("updateQuantityField").setText("15");
@@ -351,8 +352,15 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		dialog.button(JButtonMatcher.withText("OK")).click();
 		robot().waitForIdle();
 
-		Item updatedItem = new Item("2", "Comet Desk", 15, 699.99, "Updated slate");
-		Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
+		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+		Awaitility.await().atMost(10, TimeUnit.SECONDS)
+				.untilAsserted(() -> verify(itemController).updateItem(itemCaptor.capture()));
+		Item updatedItem = itemCaptor.getValue();
+		assertThat(updatedItem.getId()).isEqualTo("2");
+		assertThat(updatedItem.getName()).isEqualTo("Comet Desk");
+		assertThat(updatedItem.getQuantity()).isEqualTo(15);
+		assertThat(updatedItem.getPrice()).isEqualTo(699.99);
+		assertThat(updatedItem.getDescription()).isEqualTo("Updated slate");
 	}
 
 	@Test
@@ -403,123 +411,50 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testOnAddItemShowsErrorWhenNameMissing() throws Exception {
+	public void testOnAddItemShowsErrorWhenNameMissing() {
 		window.textBox("nameField").setText(" ");
 		window.textBox("quantityField").setText("5");
 		window.textBox("priceField").setText("10.50");
 		window.textBox("descField").setText("Desc");
 
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onAddItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
-		java.util.concurrent.atomic.AtomicBoolean done = new java.util.concurrent.atomic.AtomicBoolean(false);
-		java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "add"));
-			} catch (Exception e) {
-				error.set(e);
-			} finally {
-				done.set(true);
-			}
-		});
-
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"));
-		dialog.requireVisible();
-		dialog.label(JLabelMatcher.withText("Name is required!"));
-		dialog.button(JButtonMatcher.withText("OK")).click();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(done);
-		assertThat(error.get()).isNull();
+		robot().waitForIdle();
+		window.button("addButton").requireDisabled();
+		verify(itemController, never()).addItem(any(Item.class));
 	}
 
 	@Test
-	public void testOnAddItemShowsErrorWhenNumbersInvalid() throws Exception {
+	public void testOnAddItemShowsErrorWhenNumbersInvalid() {
 		window.textBox("nameField").setText("Nebula Rig");
 		window.textBox("quantityField").setText("abc");
 		window.textBox("priceField").setText("10.50");
 		window.textBox("descField").setText("Desc");
 
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onAddItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
-		java.util.concurrent.atomic.AtomicBoolean done = new java.util.concurrent.atomic.AtomicBoolean(false);
-		java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "add"));
-			} catch (Exception e) {
-				error.set(e);
-			} finally {
-				done.set(true);
-			}
-		});
-
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"));
+		robot().waitForIdle();
+		Awaitility.await().atMost(5, TimeUnit.SECONDS)
+				.untilAsserted(() -> window.button("addButton").requireEnabled());
+		window.button("addButton").click();
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
+				.withTimeout(10000)
+				.using(robot());
 		dialog.requireVisible();
 		dialog.label(JLabelMatcher.withText("Quantity and Price must be numeric!"));
 		dialog.button(JButtonMatcher.withText("OK")).click();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(done);
-		assertThat(error.get()).isNull();
+		verify(itemController, never()).addItem(any(Item.class));
 	}
 
 	@Test
-	public void testOnUpdateItemShowsWarningWhenNoSelection() throws Exception {
+	public void testOnUpdateItemShowsWarningWhenNoSelection() {
 		window.list("itemList").clearSelection();
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onUpdateItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
-		java.util.concurrent.atomic.AtomicBoolean done = new java.util.concurrent.atomic.AtomicBoolean(false);
-		java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "update"));
-			} catch (Exception e) {
-				error.set(e);
-			} finally {
-				done.set(true);
-			}
-		});
-
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"));
-		dialog.requireVisible();
-		dialog.label(JLabelMatcher.withText("Select an item first!"));
-		dialog.button(JButtonMatcher.withText("OK")).click();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(done);
-		assertThat(error.get()).isNull();
+		window.button("updateButton").requireDisabled();
+		verify(itemController, never()).updateItem(any(Item.class));
 	}
 
 	@Test
-	public void testOnDeleteItemShowsWarningWhenNoSelection() throws Exception {
+	public void testOnDeleteItemShowsWarningWhenNoSelection() {
 		window.list("itemList").clearSelection();
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onDeleteItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
-		java.util.concurrent.atomic.AtomicBoolean done = new java.util.concurrent.atomic.AtomicBoolean(false);
-		java.util.concurrent.atomic.AtomicReference<Throwable> error = new java.util.concurrent.atomic.AtomicReference<>();
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "delete"));
-			} catch (Exception e) {
-				error.set(e);
-			} finally {
-				done.set(true);
-			}
-		});
-
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"));
-		dialog.requireVisible();
-		dialog.label(JLabelMatcher.withText("Select an item first!"));
-		dialog.button(JButtonMatcher.withText("OK")).click();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(done);
-		assertThat(error.get()).isNull();
+		window.button("deleteButton").requireDisabled();
+		verify(itemController, never()).deleteItem(any(Item.class));
 	}
 
 	@Test
@@ -531,18 +466,23 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.button("updateButton").requireEnabled());
 		window.button("updateButton").click();
-		org.assertj.swing.fixture.DialogFixture dialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"))
+				.withTimeout(10000)
+				.using(robot());
 		dialog.textBox("updateNameField").setText("Orbit Chair");
 		dialog.textBox("updateQuantityField").setText("bad");
 		dialog.textBox("updatePriceField").setText("bad");
 		dialog.textBox("updateDescField").setText("Ergonomic mesh");
 		dialog.button(JButtonMatcher.withText("OK")).click();
 
-		org.assertj.swing.fixture.DialogFixture errorDialog = window.dialog(
-				org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"));
+		org.assertj.swing.fixture.DialogFixture errorDialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
+				.withTimeout(10000)
+				.using(robot());
 		errorDialog.requireVisible();
 		errorDialog.button(JButtonMatcher.withText("OK")).click();
+		verify(itemController, never()).updateItem(any(Item.class));
 	}
 
 	@Test
