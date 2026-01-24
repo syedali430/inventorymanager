@@ -72,4 +72,63 @@ public class ItemRepositoryTest {
             server.shutdownNow();
         }
     }
+
+    @Test
+    public void testCreateDefaultUsesInventoryProperties() {
+        MongoServer server = new MongoServer(new MemoryBackend());
+        server.bind("localhost", 0);
+        int port = server.getLocalAddress().getPort();
+
+        System.setProperty("inventory.mongo.host", "localhost");
+        System.setProperty("inventory.mongo.port", String.valueOf(port));
+        System.setProperty("inventory.mongo.db", "testdb");
+        System.setProperty("inventory.mongo.collection", "testitems");
+
+        try {
+            ItemRepository repo = ItemRepository.createDefault();
+            repo.save(new Item("10", "Desk", 2, 150.0, "work desk"));
+            assertTrue(repo.findById("10").isPresent());
+        } finally {
+            System.clearProperty("inventory.mongo.host");
+            System.clearProperty("inventory.mongo.port");
+            System.clearProperty("inventory.mongo.db");
+            System.clearProperty("inventory.mongo.collection");
+            server.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testCreateWithHostPortUsesDefaultNames() {
+        MongoServer server = new MongoServer(new MemoryBackend());
+        server.bind("localhost", 0);
+        int port = server.getLocalAddress().getPort();
+
+        System.setProperty("inventory.mongo.db", "hostportdb");
+        System.setProperty("inventory.mongo.collection", "hostportitems");
+
+        try {
+            ItemRepository repo = ItemRepository.create("localhost", port);
+            repo.save(new Item("20", "Lamp", 1, 35.0, "desk lamp"));
+            assertEquals(1, repo.findAll().size());
+        } finally {
+            System.clearProperty("inventory.mongo.db");
+            System.clearProperty("inventory.mongo.collection");
+            server.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testCreateWithHostPortAndNames() {
+        MongoServer server = new MongoServer(new MemoryBackend());
+        server.bind("localhost", 0);
+        int port = server.getLocalAddress().getPort();
+
+        try {
+            ItemRepository repo = ItemRepository.create("localhost", port, "customdb", "customitems");
+            repo.save(new Item("30", "Shelf", 4, 79.0, "wood shelf"));
+            assertTrue(repo.findById("30").isPresent());
+        } finally {
+            server.shutdownNow();
+        }
+    }
 }
