@@ -164,19 +164,76 @@ public class InventoryApplicationTest {
     }
 
     @Test
-    public void testWaitForMongoReturnsFalseWhenInterrupted() throws Exception {
+    public void testCreateFrameWithGuiceCreatesFrame() throws Exception {
+        assumeGraphicsAvailable();
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        try {
+            InventoryApplication app = new InventoryApplication();
+            Method method = InventoryApplication.class.getDeclaredMethod("createFrameWithGuice",
+                    String.class, int.class, String.class, String.class);
+            method.setAccessible(true);
+            InventoryFrame frame = (InventoryFrame) method.invoke(app, "localhost", port, "inventorydb", "items");
+            assertNotNull(frame);
+            frame.dispose();
+        } finally {
+            disposeInventoryFrames();
+            mongoServer.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testWaitForMongoReturnsFalseWhenAttemptsZero() throws Exception {
         InventoryApplication app = new InventoryApplication();
         Method method = InventoryApplication.class.getDeclaredMethod("waitForMongo",
                 String.class, int.class, String.class, int.class, long.class);
         method.setAccessible(true);
-        Thread.currentThread().interrupt();
+        boolean result = (boolean) method.invoke(app, "localhost", 1, "inventorydb", 0, 0L);
+        assertFalse(result);
+    }
+
+    @Test
+    public void testWaitForMongoReturnsFalseAfterRetries() throws Exception {
+        InventoryApplication app = new InventoryApplication();
+        Method method = InventoryApplication.class.getDeclaredMethod("waitForMongo",
+                String.class, int.class, String.class, int.class, long.class);
+        method.setAccessible(true);
+        int port = findFreePort();
+        boolean result = (boolean) method.invoke(app, "localhost", port, "inventorydb", 2, 0L);
+        assertFalse(result);
+    }
+
+    @Test
+    public void testWaitForMongoReturnsTrueWhenMongoAvailable() throws Exception {
+        InventoryApplication app = new InventoryApplication();
+        Method method = InventoryApplication.class.getDeclaredMethod("waitForMongo",
+                String.class, int.class, String.class, int.class, long.class);
+        method.setAccessible(true);
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
         try {
-            boolean result = (boolean) method.invoke(app, "localhost", -1, "inventorydb", 1, 1L);
-            assertFalse(result);
-            assertTrue(Thread.currentThread().isInterrupted());
+            boolean result = (boolean) method.invoke(app, "localhost", port, "inventorydb", 1, 0L);
+            assertTrue(result);
         } finally {
-            Thread.interrupted();
+            mongoServer.shutdownNow();
         }
+    }
+
+    @Test
+    public void testWaitForMongoReturnsFalseWhenInterrupted() throws Exception {
+        InventoryApplication app = new InventoryApplication() {
+            @Override
+            protected void sleep(long delayMillis) throws InterruptedException {
+                throw new InterruptedException("forced for test");
+            }
+        };
+        Method method = InventoryApplication.class.getDeclaredMethod("waitForMongo",
+                String.class, int.class, String.class, int.class, long.class);
+        method.setAccessible(true);
+        boolean result = (boolean) method.invoke(app, "localhost", -1, "inventorydb", 1, 5000L);
+        assertFalse(result);
     }
 
     @Test

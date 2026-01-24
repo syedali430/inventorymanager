@@ -75,6 +75,40 @@ public class ItemRepositoryTest {
     }
 
     @Test
+    public void testFindAllReturnsEmptyWhenNoItems() {
+        MongoServer server = new MongoServer(new MemoryBackend());
+        server.bind("localhost", 0);
+        int port = server.getLocalAddress().getPort();
+        MongoClient client = new MongoClient("localhost", port);
+
+        try {
+            ItemRepository repo = ItemRepository.create(client);
+            List<Item> items = repo.findAll();
+            assertEquals(0, items.size());
+        } finally {
+            client.close();
+            server.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testDeleteMissingItemDoesNotFail() {
+        MongoServer server = new MongoServer(new MemoryBackend());
+        server.bind("localhost", 0);
+        int port = server.getLocalAddress().getPort();
+        MongoClient client = new MongoClient("localhost", port);
+
+        try {
+            ItemRepository repo = ItemRepository.create(client);
+            repo.delete("missing");
+            assertEquals(0, repo.findAll().size());
+        } finally {
+            client.close();
+            server.shutdownNow();
+        }
+    }
+
+    @Test
     public void testCreateDefaultUsesInventoryProperties() {
         MongoServer server = new MongoServer(new MemoryBackend());
         server.bind("localhost", 0);
@@ -96,6 +130,22 @@ public class ItemRepositoryTest {
             System.clearProperty("inventory.mongo.collection");
             server.shutdownNow();
         }
+    }
+
+    @Test
+    public void testCreateDefaultWithoutPropertiesCreatesRepository() throws Exception {
+        System.clearProperty("inventory.mongo.host");
+        System.clearProperty("inventory.mongo.port");
+        System.clearProperty("inventory.mongo.db");
+        System.clearProperty("inventory.mongo.collection");
+
+        ItemRepository repo = ItemRepository.createDefault();
+        assertTrue(repo != null);
+
+        java.lang.reflect.Field clientField = ItemRepository.class.getDeclaredField("client");
+        clientField.setAccessible(true);
+        MongoClient client = (MongoClient) clientField.get(repo);
+        client.close();
     }
 
     @Test
@@ -193,6 +243,17 @@ public class ItemRepositoryTest {
             assertEquals(27017, ItemRepository.defaultPort());
         } finally {
             System.clearProperty("mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultPortFallsBackWhenInventoryPortInvalid() {
+        System.clearProperty("mongo.port");
+        System.setProperty("inventory.mongo.port", "bad-port");
+        try {
+            assertEquals(27017, ItemRepository.defaultPort());
+        } finally {
+            System.clearProperty("inventory.mongo.port");
         }
     }
 

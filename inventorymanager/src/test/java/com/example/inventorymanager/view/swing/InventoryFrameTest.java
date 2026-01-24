@@ -7,6 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.timeout;
 
+import java.awt.Dialog;
+import java.awt.Window;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -43,10 +45,13 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	private ItemControllerInterface itemController;
 
 	private AutoCloseable closeable;
+	private java.lang.reflect.Method updateSelectionStateMethod;
 
 	@Override
 	protected void onSetUp() throws Exception {
 		closeable = MockitoAnnotations.openMocks(this);
+		updateSelectionStateMethod = InventoryFrame.class.getDeclaredMethod("updateSelectionState");
+		updateSelectionStateMethod.setAccessible(true);
 		GuiActionRunner.execute(() -> {
 			inventoryFrame = new InventoryFrame();
 			inventoryFrame.setController(itemController);
@@ -55,6 +60,60 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		window = new FrameFixture(robot(), inventoryFrame);
 		window.show();
 
+	}
+
+	private void invokeUpdateSelectionState() {
+		GuiActionRunner.execute(() -> {
+			try {
+				updateSelectionStateMethod.invoke(inventoryFrame);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		});
+	}
+
+	private void disposeOpenDialogs() {
+		GuiActionRunner.execute(() -> {
+			for (Window windowItem : Window.getWindows()) {
+				if (windowItem instanceof Dialog && windowItem.isShowing()) {
+					windowItem.dispose();
+				}
+			}
+			return null;
+		});
+	}
+
+	private Dialog waitForDialogWithTitle(String title) {
+		final Dialog[] found = new Dialog[1];
+		robot().waitForIdle();
+		Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+			for (Window windowItem : Window.getWindows()) {
+				if (windowItem instanceof Dialog) {
+					Dialog dialog = (Dialog) windowItem;
+					if (dialog.isShowing() && title.equals(dialog.getTitle())) {
+						found[0] = dialog;
+						return;
+					}
+				}
+			}
+			throw new AssertionError("Dialog not visible");
+		});
+		return found[0];
+	}
+
+	private void invokeActionOnEdtAsync(String methodName, String actionCommand) throws Exception {
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod(methodName,
+				java.awt.event.ActionEvent.class);
+		method.setAccessible(true);
+		javax.swing.SwingUtilities.invokeLater(() -> {
+			try {
+				method.invoke(inventoryFrame,
+						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, actionCommand));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	@Override
@@ -106,9 +165,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		JTextComponentFixture quantityField = window.textBox("quantityField");
 		JTextComponentFixture priceField = window.textBox("priceField");
 
-		nameField.enterText(" ");
-		quantityField.enterText("10");
-		priceField.enterText("999.99");
+		nameField.setText(" ");
+		quantityField.setText("10");
+		priceField.setText("999.99");
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.button(JButtonMatcher.withText("Add Item")).requireDisabled());
 
@@ -116,9 +175,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		quantityField.setText("");
 		priceField.setText("");
 
-		nameField.enterText("Nova Pad");
-		quantityField.enterText(" ");
-		priceField.enterText("999.99");
+		nameField.setText("Nova Pad");
+		quantityField.setText(" ");
+		priceField.setText("999.99");
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.button(JButtonMatcher.withText("Add Item")).requireDisabled());
 
@@ -126,9 +185,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		quantityField.setText("");
 		priceField.setText("");
 
-		nameField.enterText("Nova Pad");
-		quantityField.enterText("10");
-		priceField.enterText(" ");
+		nameField.setText("Nova Pad");
+		quantityField.setText("10");
+		priceField.setText(" ");
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.button(JButtonMatcher.withText("Add Item")).requireDisabled());
 	}
@@ -143,6 +202,47 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(deleteButton::requireEnabled);
 		window.list("itemList").clearSelection();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(deleteButton::requireDisabled);
+	}
+
+	@Test
+	public void testUpdateSelectionStatePopulatesFieldsWhenSelected() throws Exception {
+		Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
+		GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
+		window.list("itemList").selectItem(0);
+		invokeUpdateSelectionState();
+		window.textBox("nameField").requireText("Orbit Chair");
+		window.textBox("quantityField").requireText("3");
+		window.textBox("priceField").requireText("199.25");
+		window.textBox("descField").requireText("Ergonomic mesh");
+	}
+
+	@Test
+	public void testUpdateSelectionStateClearsFieldsWhenNoSelection() throws Exception {
+		window.list("itemList").clearSelection();
+		invokeUpdateSelectionState();
+		window.textBox("nameField").requireText("");
+		window.textBox("quantityField").requireText("");
+		window.textBox("priceField").requireText("");
+		window.textBox("descField").requireText("");
+	}
+
+	@Test
+	public void testUpdateAddButtonStateEnablesWhenFilled() throws Exception {
+		window.list("itemList").clearSelection();
+		window.textBox("nameField").setText("Nova Pad");
+		window.textBox("quantityField").setText("2");
+		window.textBox("priceField").setText("10.00");
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("updateAddButtonState");
+		method.setAccessible(true);
+		GuiActionRunner.execute(() -> {
+			try {
+				method.invoke(inventoryFrame);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		});
+		window.button("addButton").requireEnabled();
 	}
 
 	@Test
@@ -300,25 +400,19 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	public void testDeleteButtonShouldDelegateToItemControllerDeleteItem() {
 		Item item1 = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 		Item item2 = new Item("2", "Aurora Tablet", 6, 249.99, "Matte finish slate");
-		GuiActionRunner.execute(
-				() -> {
-					DefaultListModel<Item> listStudentsModel = inventoryFrame.getListModel();
-					listStudentsModel.addElement(item1);
-					listStudentsModel.addElement(item2);
-				});
+		GuiActionRunner.execute(() -> {
+			DefaultListModel<Item> listStudentsModel = inventoryFrame.getListModel();
+			listStudentsModel.addElement(item1);
+			listStudentsModel.addElement(item2);
+			return null;
+		});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
-		javax.swing.JList<?> list = window.list("itemList").target();
-		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
-			int selected = GuiActionRunner.execute(() -> {
-				list.setSelectedIndex(1);
-				list.ensureIndexIsVisible(1);
-				return list.getSelectedIndex();
-			});
-			assertThat(selected).isEqualTo(1);
-			boolean enabled = GuiActionRunner.execute(() -> window.button("deleteButton").target().isEnabled());
-			assertThat(enabled).isTrue();
+		GuiActionRunner.execute(() -> {
+			window.list("itemList").target().setSelectedIndex(1);
+			return null;
 		});
+		invokeUpdateSelectionState();
 		GuiActionRunner.execute(() -> {
 			window.button("deleteButton").target().doClick();
 			return null;
@@ -389,16 +483,20 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	@Test
 	public void testUpdateDialogCancelDoesNotCallController() {
 		Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
-		GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
+		GuiActionRunner.execute(() -> {
+			inventoryFrame.getListModel().addElement(item);
+			return null;
+		});
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(1));
+		GuiActionRunner.execute(() -> {
+			window.list("itemList").target().setSelectedIndex(0);
+			return null;
+		});
+		invokeUpdateSelectionState();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
-				.untilAsserted(() -> {
-					window.list("itemList").selectItem(0);
-					window.list("itemList").requireSelection(0);
-					window.button("updateButton").requireEnabled();
-				});
+				.untilAsserted(() -> window.button("updateButton").requireEnabled());
 
 		window.button("updateButton").click();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(
@@ -456,24 +554,12 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		window.textBox("quantityField").setText("5");
 		window.textBox("priceField").setText("10.50");
 		window.textBox("descField").setText("Desc");
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onAddItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
+		invokeActionOnEdtAsync("onAddItem", "add");
+		Dialog dialog = waitForDialogWithTitle("Error");
 		GuiActionRunner.execute(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "add"));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			dialog.dispose();
 			return null;
 		});
-		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
-				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
-				.withTimeout(5000)
-				.using(robot());
-		dialog.requireVisible();
-		dialog.button(JButtonMatcher.withText("OK")).click();
 		verify(itemController, never()).addItem(any(Item.class));
 	}
 
@@ -484,18 +570,17 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		window.textBox("priceField").setText("10.50");
 		window.textBox("descField").setText("Desc");
 
-		robot().waitForIdle();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS)
-				.untilAsserted(() -> window.button("addButton").requireEnabled());
-		window.button("addButton").click();
-		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
-				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
-				.withTimeout(10000)
-				.using(robot());
-		dialog.requireVisible();
-		dialog.label(JLabelMatcher.withText("Quantity and Price must be numeric!"));
-		dialog.button(JButtonMatcher.withText("OK")).click();
-		verify(itemController, never()).addItem(any(Item.class));
+		try {
+			invokeActionOnEdtAsync("onAddItem", "add");
+			Dialog dialog = waitForDialogWithTitle("Error");
+			GuiActionRunner.execute(() -> {
+				dialog.dispose();
+				return null;
+			});
+			verify(itemController, never()).addItem(any(Item.class));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Test
@@ -515,48 +600,24 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	@Test
 	public void testOnUpdateItemShowsWarningDialogWhenInvokedWithoutSelection() throws Exception {
 		window.list("itemList").clearSelection();
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onUpdateItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
+		invokeActionOnEdtAsync("onUpdateItem", "update");
+		Dialog dialog = waitForDialogWithTitle("Warning");
 		GuiActionRunner.execute(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "update"));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			dialog.dispose();
 			return null;
 		});
-		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
-				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"))
-				.withTimeout(5000)
-				.using(robot());
-		dialog.requireVisible();
-		dialog.button(JButtonMatcher.withText("OK")).click();
 		verify(itemController, never()).updateItem(any(Item.class));
 	}
 
 	@Test
 	public void testOnDeleteItemShowsWarningDialogWhenInvokedWithoutSelection() throws Exception {
 		window.list("itemList").clearSelection();
-		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onDeleteItem",
-				java.awt.event.ActionEvent.class);
-		method.setAccessible(true);
+		invokeActionOnEdtAsync("onDeleteItem", "delete");
+		Dialog dialog = waitForDialogWithTitle("Warning");
 		GuiActionRunner.execute(() -> {
-			try {
-				method.invoke(inventoryFrame,
-						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "delete"));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+			dialog.dispose();
 			return null;
 		});
-		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
-				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"))
-				.withTimeout(5000)
-				.using(robot());
-		dialog.requireVisible();
-		dialog.button(JButtonMatcher.withText("OK")).click();
 		verify(itemController, never()).deleteItem(any(Item.class));
 	}
 

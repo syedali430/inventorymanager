@@ -105,13 +105,17 @@ public class InventoryApplication implements Callable<Integer> {
                 return true;
             }
             try {
-                Thread.sleep(delayMillis);
+                sleep(delayMillis);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
             }
         }
         return false;
+    }
+
+    protected void sleep(long delayMillis) throws InterruptedException {
+        Thread.sleep(delayMillis);
     }
 
     private boolean canConnect(String host, int port, String dbName) {
