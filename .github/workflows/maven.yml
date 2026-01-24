@@ -53,12 +53,13 @@ jobs:
 
       - name: Build with Maven (coverage)
         if: ${{ matrix.coverage }}
-        run: xvfb-run ./mvnw -B -Pjacoco test jacoco:report
+        run: xvfb-run ./mvnw -B -Pjacoco test
         working-directory: ${{ env.workdir }}
 
-      - name: Verify JaCoCo XML for Coveralls
+      - name: Prepare JaCoCo XML for Coveralls
         if: ${{ matrix.coverage }}
         run: |
+          ./mvnw -B -Pjacoco -DskipTests=true jacoco:report
           set -e
           if [ ! -f target/site/jacoco/jacoco.xml ]; then
             echo "jacoco.xml not found under target/site/jacoco/"
