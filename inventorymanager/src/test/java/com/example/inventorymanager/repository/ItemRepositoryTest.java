@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Optional;
+import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +46,7 @@ public class ItemRepositoryTest {
             assertTrue(updatedFound.isPresent());
             assertEquals("Chair XL", updatedFound.get().getName());
             assertEquals(5, updatedFound.get().getQuantity());
-            assertEquals(Double.valueOf(109.0), updatedFound.get().getPrice());
+            assertEquals(109.0, updatedFound.get().getPrice(), 0.0);
             assertEquals("wider chair", updatedFound.get().getDescription());
 
             repo.delete("2");
@@ -129,6 +130,102 @@ public class ItemRepositoryTest {
             assertTrue(repo.findById("30").isPresent());
         } finally {
             server.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testDefaultHostPrefersMongoHostProperty() {
+        System.setProperty("mongo.host", "primary-host");
+        System.setProperty("inventory.mongo.host", "fallback-host");
+        try {
+            assertEquals("primary-host", ItemRepository.defaultHost());
+        } finally {
+            System.clearProperty("mongo.host");
+            System.clearProperty("inventory.mongo.host");
+        }
+    }
+
+    @Test
+    public void testDefaultHostUsesInventoryHostWhenPrimaryMissing() {
+        System.clearProperty("mongo.host");
+        System.setProperty("inventory.mongo.host", "inventory-host");
+        try {
+            assertEquals("inventory-host", ItemRepository.defaultHost());
+        } finally {
+            System.clearProperty("inventory.mongo.host");
+        }
+    }
+
+    @Test
+    public void testDefaultHostFallsBackToLocalhost() {
+        System.clearProperty("mongo.host");
+        System.clearProperty("inventory.mongo.host");
+        assertEquals("localhost", ItemRepository.defaultHost());
+    }
+
+    @Test
+    public void testDefaultPortPrefersMongoPortProperty() {
+        System.setProperty("mongo.port", "12345");
+        System.setProperty("inventory.mongo.port", "27018");
+        try {
+            assertEquals(12345, ItemRepository.defaultPort());
+        } finally {
+            System.clearProperty("mongo.port");
+            System.clearProperty("inventory.mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultPortUsesInventoryPortWhenPrimaryMissing() {
+        System.clearProperty("mongo.port");
+        System.setProperty("inventory.mongo.port", "27018");
+        try {
+            assertEquals(27018, ItemRepository.defaultPort());
+        } finally {
+            System.clearProperty("inventory.mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultPortFallsBackWhenInvalid() {
+        System.setProperty("mongo.port", "not-a-number");
+        try {
+            assertEquals(27017, ItemRepository.defaultPort());
+        } finally {
+            System.clearProperty("mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultDatabaseAndCollectionNames() throws Exception {
+        System.clearProperty("inventory.mongo.db");
+        System.clearProperty("inventory.mongo.collection");
+        Method dbMethod = ItemRepository.class.getDeclaredMethod("defaultDatabaseName");
+        Method collectionMethod = ItemRepository.class.getDeclaredMethod("defaultCollectionName");
+        dbMethod.setAccessible(true);
+        collectionMethod.setAccessible(true);
+        String dbName = (String) dbMethod.invoke(null);
+        String collectionName = (String) collectionMethod.invoke(null);
+        assertEquals("inventorydb", dbName);
+        assertEquals("items", collectionName);
+    }
+
+    @Test
+    public void testDefaultDatabaseAndCollectionNamesFromProperties() throws Exception {
+        System.setProperty("inventory.mongo.db", "customdb");
+        System.setProperty("inventory.mongo.collection", "customcollection");
+        Method dbMethod = ItemRepository.class.getDeclaredMethod("defaultDatabaseName");
+        Method collectionMethod = ItemRepository.class.getDeclaredMethod("defaultCollectionName");
+        dbMethod.setAccessible(true);
+        collectionMethod.setAccessible(true);
+        try {
+            String dbName = (String) dbMethod.invoke(null);
+            String collectionName = (String) collectionMethod.invoke(null);
+            assertEquals("customdb", dbName);
+            assertEquals("customcollection", collectionName);
+        } finally {
+            System.clearProperty("inventory.mongo.db");
+            System.clearProperty("inventory.mongo.collection");
         }
     }
 }

@@ -451,6 +451,33 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
+	public void testOnAddItemShowsDialogWhenNameMissing() throws Exception {
+		window.textBox("nameField").setText(" ");
+		window.textBox("quantityField").setText("5");
+		window.textBox("priceField").setText("10.50");
+		window.textBox("descField").setText("Desc");
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onAddItem",
+				java.awt.event.ActionEvent.class);
+		method.setAccessible(true);
+		GuiActionRunner.execute(() -> {
+			try {
+				method.invoke(inventoryFrame,
+						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "add"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		});
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Error"))
+				.withTimeout(5000)
+				.using(robot());
+		dialog.requireVisible();
+		dialog.button(JButtonMatcher.withText("OK")).click();
+		verify(itemController, never()).addItem(any(Item.class));
+	}
+
+	@Test
 	public void testOnAddItemShowsErrorWhenNumbersInvalid() {
 		window.textBox("nameField").setText("Nebula Rig");
 		window.textBox("quantityField").setText("abc");
@@ -540,6 +567,16 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 			return null;
 		});
 		verify(itemController, timeout(5000)).getAllItems();
+	}
+
+	@Test
+	public void testStartDoesNotRequestItemsWhenControllerNull() {
+		GuiActionRunner.execute(() -> {
+			inventoryFrame.setController(null);
+			inventoryFrame.start();
+			return null;
+		});
+		verify(itemController, never()).getAllItems();
 	}
 
 	@Test

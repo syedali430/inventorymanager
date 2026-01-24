@@ -10,10 +10,13 @@ import org.junit.Test;
 import picocli.CommandLine;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -73,6 +76,32 @@ public class InventoryApplicationTest {
     }
 
     @Test
+    public void testApplyLookAndFeelReturnsTrueOnValidClass() {
+        InventoryApplication app = new InventoryApplication();
+        boolean applied = app.applyLookAndFeel(javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
+        assertTrue(applied);
+    }
+
+    @Test
+    public void testCreateFrameWithExplicitValues() {
+        assumeGraphicsAvailable();
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        try {
+            InventoryApplication app = new InventoryApplication();
+            InventoryFrame frame = GuiActionRunner.execute(
+                    (java.util.concurrent.Callable<InventoryFrame>) () -> app.createFrame("localhost", port,
+                            "inventorydb", "items"));
+            assertNotNull(frame);
+            frame.dispose();
+        } finally {
+            disposeInventoryFrames();
+            mongoServer.shutdownNow();
+        }
+    }
+
+    @Test
     public void testHeadlessReturnsZeroWhenMongoAvailable() {
         MongoServer mongoServer = new MongoServer(new MemoryBackend());
         mongoServer.bind("localhost", 0);
@@ -100,6 +129,75 @@ public class InventoryApplicationTest {
                 "--db-name=inventorydb"
         );
         assertEquals(1, exitCode);
+    }
+
+    @Test
+    public void testCallNonHeadlessReturnsZero() throws Exception {
+        assumeGraphicsAvailable();
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        InventoryApplication app = new InventoryApplication();
+
+        java.lang.reflect.Field hostField = InventoryApplication.class.getDeclaredField("mongoHost");
+        java.lang.reflect.Field portField = InventoryApplication.class.getDeclaredField("mongoPort");
+        java.lang.reflect.Field dbField = InventoryApplication.class.getDeclaredField("databaseName");
+        java.lang.reflect.Field collectionField = InventoryApplication.class.getDeclaredField("collectionName");
+        hostField.setAccessible(true);
+        portField.setAccessible(true);
+        dbField.setAccessible(true);
+        collectionField.setAccessible(true);
+        hostField.set(app, "localhost");
+        portField.set(app, port);
+        dbField.set(app, "inventorydb");
+        collectionField.set(app, "items");
+
+        try {
+            int result = app.call();
+            assertEquals(0, result);
+            InventoryFrame frame = awaitInventoryFrame();
+            assertNotNull(frame);
+        } finally {
+            disposeInventoryFrames();
+            mongoServer.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testWaitForMongoReturnsFalseWhenInterrupted() throws Exception {
+        InventoryApplication app = new InventoryApplication();
+        Method method = InventoryApplication.class.getDeclaredMethod("waitForMongo",
+                String.class, int.class, String.class, int.class, long.class);
+        method.setAccessible(true);
+        Thread.currentThread().interrupt();
+        try {
+            boolean result = (boolean) method.invoke(app, "localhost", -1, "inventorydb", 1, 1L);
+            assertFalse(result);
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    public void testCanConnectReturnsTrueAndFalse() throws Exception {
+        InventoryApplication app = new InventoryApplication();
+        Method method = InventoryApplication.class.getDeclaredMethod("canConnect",
+                String.class, int.class, String.class);
+        method.setAccessible(true);
+
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        try {
+            boolean canConnect = (boolean) method.invoke(app, "localhost", port, "inventorydb");
+            assertTrue(canConnect);
+        } finally {
+            mongoServer.shutdownNow();
+        }
+
+        boolean cannotConnect = (boolean) method.invoke(app, "localhost", -1, "inventorydb");
+        assertFalse(cannotConnect);
     }
 
     private static void assumeGraphicsAvailable() {
