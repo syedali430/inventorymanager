@@ -7,9 +7,13 @@ import org.awaitility.Awaitility;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.junit.Assume;
 import org.junit.Test;
+import picocli.CommandLine;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.awt.*;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -68,6 +72,36 @@ public class InventoryApplicationTest {
         org.junit.Assert.assertFalse(applied);
     }
 
+    @Test
+    public void testHeadlessReturnsZeroWhenMongoAvailable() {
+        MongoServer mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", 0);
+        int port = mongoServer.getLocalAddress().getPort();
+        try {
+            int exitCode = new CommandLine(new InventoryApplication()).execute(
+                    "--headless",
+                    "--mongo-host=localhost",
+                    "--mongo-port=" + port,
+                    "--db-name=inventorydb"
+            );
+            assertEquals(0, exitCode);
+        } finally {
+            mongoServer.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testHeadlessReturnsOneWhenMongoUnavailable() {
+        int port = findFreePort();
+        int exitCode = new CommandLine(new InventoryApplication()).execute(
+                "--headless",
+                "--mongo-host=localhost",
+                "--mongo-port=" + port,
+                "--db-name=inventorydb"
+        );
+        assertEquals(1, exitCode);
+    }
+
     private static void assumeGraphicsAvailable() {
         Assume.assumeFalse("Headless environment", GraphicsEnvironment.isHeadless());
     }
@@ -96,6 +130,14 @@ public class InventoryApplicationTest {
             if (frame instanceof InventoryFrame) {
                 frame.dispose();
             }
+        }
+    }
+
+    private static int findFreePort() {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to allocate a free port", e);
         }
     }
 }
