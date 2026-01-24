@@ -486,6 +486,68 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
+	public void testOnUpdateItemShowsWarningDialogWhenInvokedWithoutSelection() throws Exception {
+		window.list("itemList").clearSelection();
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onUpdateItem",
+				java.awt.event.ActionEvent.class);
+		method.setAccessible(true);
+		GuiActionRunner.execute(() -> {
+			try {
+				method.invoke(inventoryFrame,
+						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "update"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		});
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"))
+				.withTimeout(5000)
+				.using(robot());
+		dialog.requireVisible();
+		dialog.button(JButtonMatcher.withText("OK")).click();
+		verify(itemController, never()).updateItem(any(Item.class));
+	}
+
+	@Test
+	public void testOnDeleteItemShowsWarningDialogWhenInvokedWithoutSelection() throws Exception {
+		window.list("itemList").clearSelection();
+		java.lang.reflect.Method method = InventoryFrame.class.getDeclaredMethod("onDeleteItem",
+				java.awt.event.ActionEvent.class);
+		method.setAccessible(true);
+		GuiActionRunner.execute(() -> {
+			try {
+				method.invoke(inventoryFrame,
+						new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "delete"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		});
+		org.assertj.swing.fixture.DialogFixture dialog = WindowFinder
+				.findDialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Warning"))
+				.withTimeout(5000)
+				.using(robot());
+		dialog.requireVisible();
+		dialog.button(JButtonMatcher.withText("OK")).click();
+		verify(itemController, never()).deleteItem(any(Item.class));
+	}
+
+	@Test
+	public void testStartRequestsItemsWhenControllerSet() {
+		GuiActionRunner.execute(() -> {
+			inventoryFrame.start();
+			return null;
+		});
+		verify(itemController, timeout(5000)).getAllItems();
+	}
+
+	@Test
+	public void testGetControllerReturnsAssignedController() {
+		assertThat(inventoryFrame.getController()).isEqualTo(itemController);
+	}
+
+	@Test
 	public void testOnUpdateItemShowsErrorWhenNumbersInvalid() {
 		Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 		GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
