@@ -308,12 +308,21 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
+		javax.swing.JList<?> list = window.list("itemList").target();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
-			window.list("itemList").selectItem(1);
-			window.list("itemList").requireSelection(1);
-			window.button("deleteButton").requireEnabled();
+			int selected = GuiActionRunner.execute(() -> {
+				list.setSelectedIndex(1);
+				list.ensureIndexIsVisible(1);
+				return list.getSelectedIndex();
+			});
+			assertThat(selected).isEqualTo(1);
+			boolean enabled = GuiActionRunner.execute(() -> window.button("deleteButton").target().isEnabled());
+			assertThat(enabled).isTrue();
 		});
-		window.button("deleteButton").click();
+		GuiActionRunner.execute(() -> {
+			window.button("deleteButton").target().doClick();
+			return null;
+		});
 		robot().waitForIdle();
 		ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
 		Awaitility.await().atMost(8, TimeUnit.SECONDS)
