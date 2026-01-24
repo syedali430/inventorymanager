@@ -308,9 +308,8 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
-		window.list("itemList").selectItem(1);
-		robot().waitForIdle();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
+			window.list("itemList").selectItem(1);
 			window.list("itemList").requireSelection(1);
 			window.button("deleteButton").requireEnabled();
 		});
@@ -385,10 +384,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(1));
-		window.list("itemList").selectItem(0);
-		robot().waitForIdle();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> {
+					window.list("itemList").selectItem(0);
 					window.list("itemList").requireSelection(0);
 					window.button("updateButton").requireEnabled();
 				});
