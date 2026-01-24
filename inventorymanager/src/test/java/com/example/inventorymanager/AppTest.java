@@ -10,6 +10,8 @@ public class AppTest {
 
     @Test
     public void testMainRunsWithoutException() {
+        App app = new App();
+        assertNotNull(app);
         App.main(new String[]{});
     }
 

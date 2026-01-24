@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class ItemRepositoryTest {
@@ -21,9 +22,7 @@ public class ItemRepositoryTest {
         MongoServer server = new MongoServer(new MemoryBackend());
         server.bind("localhost", 0);
         int port = server.getLocalAddress().getPort();
-        MongoClient client = new MongoClient("localhost", port);
-
-        try {
+        try (MongoClient client = new MongoClient("localhost", port)) {
             ItemRepository repo = ItemRepository.create(client);
 
             Item first = new Item("1", "Chair", 3, 99.5, "desk chair");
@@ -53,7 +52,6 @@ public class ItemRepositoryTest {
             assertFalse(repo.findById("2").isPresent());
             assertEquals(1, repo.findAll().size());
         } finally {
-            client.close();
             server.shutdownNow();
         }
     }
@@ -63,13 +61,10 @@ public class ItemRepositoryTest {
         MongoServer server = new MongoServer(new MemoryBackend());
         server.bind("localhost", 0);
         int port = server.getLocalAddress().getPort();
-        MongoClient client = new MongoClient("localhost", port);
-
-        try {
+        try (MongoClient client = new MongoClient("localhost", port)) {
             ItemRepository repo = ItemRepository.create(client);
             assertFalse(repo.findById("missing").isPresent());
         } finally {
-            client.close();
             server.shutdownNow();
         }
     }
@@ -79,14 +74,11 @@ public class ItemRepositoryTest {
         MongoServer server = new MongoServer(new MemoryBackend());
         server.bind("localhost", 0);
         int port = server.getLocalAddress().getPort();
-        MongoClient client = new MongoClient("localhost", port);
-
-        try {
+        try (MongoClient client = new MongoClient("localhost", port)) {
             ItemRepository repo = ItemRepository.create(client);
             List<Item> items = repo.findAll();
             assertEquals(0, items.size());
         } finally {
-            client.close();
             server.shutdownNow();
         }
     }
@@ -96,14 +88,11 @@ public class ItemRepositoryTest {
         MongoServer server = new MongoServer(new MemoryBackend());
         server.bind("localhost", 0);
         int port = server.getLocalAddress().getPort();
-        MongoClient client = new MongoClient("localhost", port);
-
-        try {
+        try (MongoClient client = new MongoClient("localhost", port)) {
             ItemRepository repo = ItemRepository.create(client);
             repo.delete("missing");
             assertEquals(0, repo.findAll().size());
         } finally {
-            client.close();
             server.shutdownNow();
         }
     }
@@ -140,7 +129,7 @@ public class ItemRepositoryTest {
         System.clearProperty("inventory.mongo.collection");
 
         ItemRepository repo = ItemRepository.createDefault();
-        assertTrue(repo != null);
+        assertNotNull(repo);
 
         java.lang.reflect.Field clientField = ItemRepository.class.getDeclaredField("client");
         clientField.setAccessible(true);

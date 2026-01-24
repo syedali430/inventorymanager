@@ -73,17 +73,6 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		});
 	}
 
-	private void disposeOpenDialogs() {
-		GuiActionRunner.execute(() -> {
-			for (Window windowItem : Window.getWindows()) {
-				if (windowItem instanceof Dialog && windowItem.isShowing()) {
-					windowItem.dispose();
-				}
-			}
-			return null;
-		});
-	}
-
 	private Dialog waitForDialogWithTitle(String title) {
 		final Dialog[] found = new Dialog[1];
 		robot().waitForIdle();
@@ -205,7 +194,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testUpdateSelectionStatePopulatesFieldsWhenSelected() throws Exception {
+	public void testUpdateSelectionStatePopulatesFieldsWhenSelected() {
 		Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 		GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
 		window.list("itemList").selectItem(0);
@@ -217,7 +206,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 	}
 
 	@Test
-	public void testUpdateSelectionStateClearsFieldsWhenNoSelection() throws Exception {
+	public void testUpdateSelectionStateClearsFieldsWhenNoSelection() {
 		window.list("itemList").clearSelection();
 		invokeUpdateSelectionState();
 		window.textBox("nameField").requireText("");
