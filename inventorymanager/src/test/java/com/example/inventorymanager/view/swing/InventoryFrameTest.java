@@ -308,17 +308,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
-		try {
-			java.lang.reflect.Field listField = InventoryFrame.class.getDeclaredField("itemList");
-			listField.setAccessible(true);
-			javax.swing.JList<?> list = (javax.swing.JList<?>) listField.get(inventoryFrame);
-			GuiActionRunner.execute(() -> {
-				list.setSelectedIndex(1);
-				return null;
-			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		window.list("itemList").selectItem(1);
 		robot().waitForIdle();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			window.list("itemList").requireSelection(1);
@@ -395,17 +385,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(1));
-		try {
-			java.lang.reflect.Field listField = InventoryFrame.class.getDeclaredField("itemList");
-			listField.setAccessible(true);
-			javax.swing.JList<?> list = (javax.swing.JList<?>) listField.get(inventoryFrame);
-			GuiActionRunner.execute(() -> {
-				list.setSelectedIndex(0);
-				return null;
-			});
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		window.list("itemList").selectItem(0);
 		robot().waitForIdle();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> {
