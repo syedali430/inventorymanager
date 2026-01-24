@@ -53,13 +53,7 @@ jobs:
 
       - name: Build with Maven (coverage)
         if: ${{ matrix.coverage }}
-        run: xvfb-run ./mvnw -B -Pjacoco test
-        working-directory: ${{ env.workdir }}
-
-      - name: Generate JaCoCo XML report
-        if: ${{ matrix.coverage }}
-        run: |
-          ./mvnw -B -Pjacoco -DskipTests=true jacoco:report
+        run: xvfb-run ./mvnw -B -Pjacoco test jacoco:report
         working-directory: ${{ env.workdir }}
 
       - name: Verify JaCoCo XML for Coveralls
