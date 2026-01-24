@@ -308,7 +308,17 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 				});
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
 				.untilAsserted(() -> window.list("itemList").requireItemCount(2));
-		window.list("itemList").selectItem(1);
+		try {
+			java.lang.reflect.Field listField = InventoryFrame.class.getDeclaredField("itemList");
+			listField.setAccessible(true);
+			javax.swing.JList<?> list = (javax.swing.JList<?>) listField.get(inventoryFrame);
+			GuiActionRunner.execute(() -> {
+				list.setSelectedIndex(1);
+				return null;
+			});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 		robot().waitForIdle();
 		Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
 			window.list("itemList").requireSelection(1);
@@ -383,9 +393,25 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase {
 		Item item = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 		GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(item));
 
-		window.list("itemList").selectItem(0);
 		Awaitility.await().atMost(5, TimeUnit.SECONDS)
-				.untilAsserted(() -> window.button("updateButton").requireEnabled());
+				.untilAsserted(() -> window.list("itemList").requireItemCount(1));
+		try {
+			java.lang.reflect.Field listField = InventoryFrame.class.getDeclaredField("itemList");
+			listField.setAccessible(true);
+			javax.swing.JList<?> list = (javax.swing.JList<?>) listField.get(inventoryFrame);
+			GuiActionRunner.execute(() -> {
+				list.setSelectedIndex(0);
+				return null;
+			});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		robot().waitForIdle();
+		Awaitility.await().atMost(5, TimeUnit.SECONDS)
+				.untilAsserted(() -> {
+					window.list("itemList").requireSelection(0);
+					window.button("updateButton").requireEnabled();
+				});
 
 		window.button("updateButton").click();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(

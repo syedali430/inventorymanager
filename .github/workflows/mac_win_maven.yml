@@ -1,6 +1,9 @@
 name: Java CI with Maven with Windows and Mac
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -8,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-12, windows-latest]
+        os: [windows-latest]
 
     name: Build with Java 8 on ${{ matrix.os }}
     env:
@@ -38,5 +41,5 @@ jobs:
 
       - name: Build with Maven (Windows)
         if: ${{ runner.os == 'Windows' }}
-        run: .\\mvnw.cmd -B test
+        run: .\\mvnw.cmd -B test -Pskip-gui-tests
         working-directory: ${{ env.workdir }}

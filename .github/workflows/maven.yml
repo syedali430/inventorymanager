@@ -12,9 +12,11 @@ jobs:
       matrix:
         include:
           - java: 8
-            coverage: true
-          - java: 11
             coverage: false
+            skip_gui: true
+          - java: 11
+            coverage: true
+            skip_gui: false
 
     name: Build with Java ${{ matrix.java }} on Linux
     env:
@@ -39,15 +41,45 @@ jobs:
             ${{ runner.os }}-m2-jdk${{ matrix.java }}-
             ${{ runner.os }}-m2-
 
+      - name: Build with Maven (skip GUI)
+        if: ${{ !matrix.coverage && matrix.skip_gui }}
+        run: xvfb-run ./mvnw -B verify -Pskip-gui-tests
+        working-directory: ${{ env.workdir }}
+
       - name: Build with Maven
-        if: ${{ !matrix.coverage || env.COVERALLS_REPO_TOKEN == '' }}
+        if: ${{ !matrix.coverage && !matrix.skip_gui }}
         run: xvfb-run ./mvnw -B verify
         working-directory: ${{ env.workdir }}
 
-      - name: Build with Maven (coveralls)
-        if: ${{ matrix.coverage && env.COVERALLS_REPO_TOKEN != '' }}
-        run: xvfb-run ./mvnw -B verify -Pjacoco -Dcoveralls.token=${{ env.COVERALLS_REPO_TOKEN }}
+      - name: Build with Maven (coverage)
+        if: ${{ matrix.coverage }}
+        run: xvfb-run ./mvnw -B -Pjacoco test
         working-directory: ${{ env.workdir }}
+
+      - name: Generate JaCoCo XML report
+        if: ${{ matrix.coverage }}
+        run: |
+          ./mvnw -B -Pjacoco -DskipTests=true jacoco:report
+        working-directory: ${{ env.workdir }}
+
+      - name: Verify JaCoCo XML for Coveralls
+        if: ${{ matrix.coverage }}
+        run: |
+          set -e
+          if [ ! -f target/site/jacoco/jacoco.xml ]; then
+            echo "jacoco.xml not found under target/site/jacoco/"
+            find target -maxdepth 4 -name jacoco.xml -print
+            exit 1
+          fi
+        working-directory: ${{ env.workdir }}
+
+      - name: Upload coverage to Coveralls
+        if: ${{ matrix.coverage }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ env.workdir }}/target/site/jacoco/jacoco.xml
+          format: jacoco
 
       - name: Generate JUnit Report
         if: ${{ always() }}

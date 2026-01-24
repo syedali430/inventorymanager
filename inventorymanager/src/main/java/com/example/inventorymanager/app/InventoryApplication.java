@@ -12,12 +12,16 @@ import javax.swing.UIManager;
 
 import com.google.inject.Guice;
 import com.mongodb.MongoClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(mixinStandardHelpOptions = true)
 public class InventoryApplication implements Callable<Integer> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryApplication.class);
 
     @Option(names = { "--mongo-host" }, description = "MongoDB host address")
     private String mongoHost = "localhost";
@@ -57,7 +61,7 @@ public class InventoryApplication implements Callable<Integer> {
             UIManager.setLookAndFeel(className);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.warn("Failed to apply look and feel {}", className, e);
             return false;
         }
     }
@@ -67,10 +71,10 @@ public class InventoryApplication implements Callable<Integer> {
         if (headless) {
             boolean connected = waitForMongo(mongoHost, mongoPort, databaseName, 10, 500);
             if (connected) {
-                System.out.println("Connected to MongoDB at " + mongoHost + ":" + mongoPort);
+                LOGGER.info("Connected to MongoDB at {}:{}", mongoHost, mongoPort);
                 return 0;
             }
-            System.err.println("Unable to connect to MongoDB at " + mongoHost + ":" + mongoPort);
+            LOGGER.error("Unable to connect to MongoDB at {}:{}", mongoHost, mongoPort);
             return 1;
         }
         applyLookAndFeel(UIManager.getSystemLookAndFeelClassName());

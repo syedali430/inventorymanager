@@ -1,8 +1,10 @@
 package com.example.inventorymanager;
 
+import com.example.inventorymanager.app.InventoryApplication;
+
 public class App {
 
     public static void main(String[] args) {
-        // Intentionally left blank: use InventoryApplication as the real entry point.
+        InventoryApplication.main(args);
     }
 }

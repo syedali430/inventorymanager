@@ -5,7 +5,6 @@ import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.view.InventoryView;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,7 +12,9 @@ import java.util.List;
 
 public class InventoryFrame extends JFrame implements InventoryView {
 
-    private ItemControllerInterface controller;
+    private static final String ERROR_TITLE = "Error";
+
+    private transient ItemControllerInterface controller;
 
     private DefaultListModel<Item> listModel;
     private JList<Item> itemList;
@@ -169,7 +170,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
             String desc = descField.getText().trim();
 
             if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Name is required!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Name is required!", ERROR_TITLE, JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -180,7 +181,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
             updateSelectionState();
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error",
+            JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
                     JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -219,7 +220,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
                         descUpdate.getText().trim());
                 controller.updateItem(updated);
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error",
+                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
                         JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -242,6 +243,8 @@ public class InventoryFrame extends JFrame implements InventoryView {
             for (Item item : items) {
                 listModel.addElement(item);
             }
+            itemList.clearSelection();
+            updateSelectionState();
         });
     }
 
@@ -279,7 +282,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
     @Override
     public void showErrorMessage(String message, Item item) {
         SwingUtilities
-                .invokeLater(() -> JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE));
+                .invokeLater(() -> JOptionPane.showMessageDialog(this, message, ERROR_TITLE, JOptionPane.ERROR_MESSAGE));
     }
 
     public DefaultListModel<Item> getListModel() {

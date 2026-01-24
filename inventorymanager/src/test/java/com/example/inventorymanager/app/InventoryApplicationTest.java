@@ -9,8 +9,6 @@ import org.junit.Assume;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,17 +63,9 @@ public class InventoryApplicationTest {
     @Test
     public void testApplyLookAndFeelReturnsFalseOnInvalidClass() {
         InventoryApplication app = new InventoryApplication();
-        PrintStream originalErr = System.err;
-        ByteArrayOutputStream errBuffer = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(errBuffer));
-        try {
-            boolean applied = app.applyLookAndFeel("not.a.real.LookAndFeel");
-            assertNotNull(app);
-            org.junit.Assert.assertFalse(applied);
-            org.junit.Assert.assertTrue(errBuffer.toString().contains("not.a.real.LookAndFeel"));
-        } finally {
-            System.setErr(originalErr);
-        }
+        boolean applied = app.applyLookAndFeel("not.a.real.LookAndFeel");
+        assertNotNull(app);
+        org.junit.Assert.assertFalse(applied);
     }
 
     private static void assumeGraphicsAvailable() {
