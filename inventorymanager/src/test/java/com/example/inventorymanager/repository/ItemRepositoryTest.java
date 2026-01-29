@@ -164,4 +164,63 @@ public class ItemRepositoryTest {
             System.clearProperty("inventory.mongo.host");
         }
     }
+
+    @Test
+    public void testDefaultHostFallsBackToLocalhost() throws Exception {
+        System.clearProperty("inventory.mongo.host");
+        java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultHost");
+        m.setAccessible(true);
+        String host = (String) m.invoke(null);
+        assertEquals("localhost", host);
+    }
+
+    @Test
+    public void testDefaultPortUsesValidSystemProperty() throws Exception {
+        System.setProperty("inventory.mongo.port", "27018");
+        try {
+            java.lang.reflect.Method m = ItemRepository.class.getDeclaredMethod("defaultPort");
+            m.setAccessible(true);
+            int portValue = (int) m.invoke(null);
+            assertEquals(27018, portValue);
+        } finally {
+            System.clearProperty("inventory.mongo.port");
+        }
+    }
+
+    @Test
+    public void testDefaultDatabaseAndCollectionNames() throws Exception {
+        System.clearProperty("inventory.mongo.db");
+        System.clearProperty("inventory.mongo.collection");
+        java.lang.reflect.Method dbMethod = ItemRepository.class.getDeclaredMethod("defaultDatabaseName");
+        java.lang.reflect.Method collectionMethod = ItemRepository.class.getDeclaredMethod("defaultCollectionName");
+        dbMethod.setAccessible(true);
+        collectionMethod.setAccessible(true);
+        assertEquals("inventorydb", dbMethod.invoke(null));
+        assertEquals("items", collectionMethod.invoke(null));
+    }
+
+    @Test
+    public void testDefaultDatabaseAndCollectionNamesUseOverrides() throws Exception {
+        System.setProperty("inventory.mongo.db", "customdb");
+        System.setProperty("inventory.mongo.collection", "customitems");
+        try {
+            java.lang.reflect.Method dbMethod = ItemRepository.class.getDeclaredMethod("defaultDatabaseName");
+            java.lang.reflect.Method collectionMethod = ItemRepository.class.getDeclaredMethod("defaultCollectionName");
+            dbMethod.setAccessible(true);
+            collectionMethod.setAccessible(true);
+            assertEquals("customdb", dbMethod.invoke(null));
+            assertEquals("customitems", collectionMethod.invoke(null));
+        } finally {
+            System.clearProperty("inventory.mongo.db");
+            System.clearProperty("inventory.mongo.collection");
+        }
+    }
+
+    @Test
+    public void testCreateWithCustomDatabaseAndCollection() {
+        ItemRepository repo = ItemRepository.create("localhost", port, "customdb", "customitems");
+        repo.save(new Item("c1", "custom", 2, 2.5, "d"));
+        assertEquals(1, repo.findAll().size());
+        assertEquals("custom", repo.findById("c1").get().getName());
+    }
 }
