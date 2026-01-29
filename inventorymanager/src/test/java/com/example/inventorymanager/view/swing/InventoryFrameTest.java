@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.ArgumentCaptor;
 
 import com.example.inventorymanager.controller.ItemControllerInterface;
 import com.example.inventorymanager.model.Item;
@@ -226,9 +227,13 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	        .untilAsserted(() -> window.button("addButton").requireEnabled());
 	    window.button("addButton").click();
 	    robot().waitForIdle();
-	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> {
-	        verify(itemController).addItem(new Item(String.valueOf(System.currentTimeMillis()), "Nebula Rig", 7, 1234.56, "Silent tower"));
-	    });
+	    ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
+	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).addItem(itemCaptor.capture()));
+	    Item captured = itemCaptor.getValue();
+	    assertThat(captured.getName()).isEqualTo("Nebula Rig");
+	    assertThat(captured.getQuantity()).isEqualTo(7);
+	    assertThat(captured.getPrice()).isEqualTo(1234.56);
+	    assertThat(captured.getDescription()).isEqualTo("Silent tower");
 	}
 
 	@Test
@@ -305,8 +310,14 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    dialog.button(JButtonMatcher.withText("OK")).click();
 	    robot().waitForIdle();
 
-	    Item updatedItem = new Item("2", "Comet Desk", 15, 699.99, "Updated slate");
-	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updatedItem));
+	    ArgumentCaptor<Item> updateCaptor = ArgumentCaptor.forClass(Item.class);
+	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updateCaptor.capture()));
+	    Item updatedItem = updateCaptor.getValue();
+	    assertThat(updatedItem.getId()).isEqualTo("2");
+	    assertThat(updatedItem.getName()).isEqualTo("Comet Desk");
+	    assertThat(updatedItem.getQuantity()).isEqualTo(15);
+	    assertThat(updatedItem.getPrice()).isEqualTo(699.99);
+	    assertThat(updatedItem.getDescription()).isEqualTo("Updated slate");
 	}
 
 	@Test
