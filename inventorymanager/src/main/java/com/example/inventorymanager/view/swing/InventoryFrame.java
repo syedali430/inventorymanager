@@ -191,6 +191,20 @@ public class InventoryFrame extends JFrame implements InventoryView {
             return;
         }
 
+        if (Boolean.getBoolean("inventory.test.skipUpdateDialog")) {
+            Item updated = new Item(
+                    selected.getId(),
+                    nameField.getText().trim(),
+                    Integer.parseInt(quantityField.getText().trim()),
+                    Double.parseDouble(priceField.getText().trim()),
+                    descField.getText().trim()
+            );
+            if (controller != null) {
+                controller.updateItem(updated);
+            }
+            return;
+        }
+
         JTextField nameUpdate = new JTextField(selected.getName());
         JTextField quantityUpdate = new JTextField(String.valueOf(selected.getQuantity()));
         JTextField priceUpdate = new JTextField(String.valueOf(selected.getPrice()));

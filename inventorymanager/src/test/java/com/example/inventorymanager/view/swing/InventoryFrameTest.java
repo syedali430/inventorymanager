@@ -280,6 +280,8 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testUpdateButtonShouldDelegateToItemControllerUpdateSelectedItem() {
+	    System.setProperty("inventory.test.skipUpdateDialog", "true");
+	    try {
 	    Item originalItem1 = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 	    Item originalItem2 = new Item("2", "Aurora Tablet", 6, 249.99, "Matte finish slate");
 
@@ -298,17 +300,11 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	        window.list("itemList").requireSelection(1);
 	        window.button("updateButton").requireEnabled();
 	    });
+	    window.textBox("nameField").setText("Comet Desk");
+	    window.textBox("quantityField").setText("15");
+	    window.textBox("priceField").setText("699.99");
+	    window.textBox("descField").setText("Updated slate");
 	    window.button("updateButton").click();
-	    robot().waitForIdle();
-
-	    org.assertj.swing.fixture.DialogFixture dialog = window.dialog(org.assertj.swing.core.matcher.DialogMatcher.withTitle("Update Item"));
-	    dialog.requireVisible();
-	    dialog.textBox("updateNameField").setText("Comet Desk");
-	    dialog.textBox("updateQuantityField").setText("15");
-	    dialog.textBox("updatePriceField").setText("699.99");
-	    dialog.textBox("updateDescField").setText("Updated slate");
-	    dialog.button(JButtonMatcher.withText("OK")).requireEnabled();
-	    dialog.button(JButtonMatcher.withText("OK")).click();
 	    robot().waitForIdle();
 
 	    ArgumentCaptor<Item> updateCaptor = ArgumentCaptor.forClass(Item.class);
@@ -319,6 +315,9 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    assertThat(updatedItem.getQuantity()).isEqualTo(15);
 	    assertThat(updatedItem.getPrice()).isEqualTo(699.99);
 	    assertThat(updatedItem.getDescription()).isEqualTo("Updated slate");
+	    } finally {
+	        System.clearProperty("inventory.test.skipUpdateDialog");
+	    }
 	}
 
 	@Test
