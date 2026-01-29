@@ -3,6 +3,7 @@ package com.example.inventorymanager.view.swing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -228,7 +229,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    window.button("addButton").click();
 	    robot().waitForIdle();
 	    ArgumentCaptor<Item> itemCaptor = ArgumentCaptor.forClass(Item.class);
-	    Awaitility.await().atMost(8, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).addItem(itemCaptor.capture()));
+	    verify(itemController, timeout(8000)).addItem(itemCaptor.capture());
 	    Item captured = itemCaptor.getValue();
 	    assertThat(captured.getName()).isEqualTo("Nebula Rig");
 	    assertThat(captured.getQuantity()).isEqualTo(7);
@@ -311,7 +312,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    robot().waitForIdle();
 
 	    ArgumentCaptor<Item> updateCaptor = ArgumentCaptor.forClass(Item.class);
-	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(itemController).updateItem(updateCaptor.capture()));
+	    verify(itemController, timeout(10000)).updateItem(updateCaptor.capture());
 	    Item updatedItem = updateCaptor.getValue();
 	    assertThat(updatedItem.getId()).isEqualTo("2");
 	    assertThat(updatedItem.getName()).isEqualTo("Comet Desk");
