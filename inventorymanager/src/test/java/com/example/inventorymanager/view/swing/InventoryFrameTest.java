@@ -296,16 +296,20 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    window.list("itemList").selectItem(1);
 	    robot().waitForIdle();
 
-	    java.lang.reflect.Method updateSelectionStateMethod = InventoryFrame.class.getDeclaredMethod("updateSelectionState");
-	    updateSelectionStateMethod.setAccessible(true);
-	    GuiActionRunner.execute(() -> {
-	        try {
-	            updateSelectionStateMethod.invoke(inventoryFrame);
-	        } catch (Exception ex) {
-	            throw new RuntimeException(ex);
-	        }
-	        return null;
-	    });
+	    try {
+	        java.lang.reflect.Method updateSelectionStateMethod = InventoryFrame.class.getDeclaredMethod("updateSelectionState");
+	        updateSelectionStateMethod.setAccessible(true);
+	        GuiActionRunner.execute(() -> {
+	            try {
+	                updateSelectionStateMethod.invoke(inventoryFrame);
+	            } catch (Exception ex) {
+	                throw new RuntimeException(ex);
+	            }
+	            return null;
+	        });
+	    } catch (NoSuchMethodException ex) {
+	        throw new AssertionError("updateSelectionState method not found", ex);
+	    }
 	    window.button("updateButton").requireEnabled();
 	    window.textBox("nameField").setText("Comet Desk");
 	    window.textBox("quantityField").setText("15");
