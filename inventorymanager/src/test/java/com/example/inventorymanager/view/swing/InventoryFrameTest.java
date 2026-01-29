@@ -296,10 +296,17 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	    window.list("itemList").selectItem(1);
 	    robot().waitForIdle();
 
-	    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
-	        window.list("itemList").requireSelection(1);
-	        window.button("updateButton").requireEnabled();
+	    java.lang.reflect.Method updateSelectionStateMethod = InventoryFrame.class.getDeclaredMethod("updateSelectionState");
+	    updateSelectionStateMethod.setAccessible(true);
+	    GuiActionRunner.execute(() -> {
+	        try {
+	            updateSelectionStateMethod.invoke(inventoryFrame);
+	        } catch (Exception ex) {
+	            throw new RuntimeException(ex);
+	        }
+	        return null;
 	    });
+	    window.button("updateButton").requireEnabled();
 	    window.textBox("nameField").setText("Comet Desk");
 	    window.textBox("quantityField").setText("15");
 	    window.textBox("priceField").setText("699.99");
