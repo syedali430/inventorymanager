@@ -1,11 +1,10 @@
 package com.example.inventorymanager.view.swing;
 
-import com.example.inventorymanager.controller.ItemController;
+import com.example.inventorymanager.controller.ItemControllerInterface;
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.view.InventoryView;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,7 +12,9 @@ import java.util.List;
 
 public class InventoryFrame extends JFrame implements InventoryView {
 
-    private final ItemController controller;
+    private static final String ERROR_TITLE = "Error";
+
+    private transient ItemControllerInterface controller;
     private DefaultListModel<Item> listModel;
     private JList<Item> itemList;
 
@@ -25,9 +26,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
     private JButton updateButton;
     private JButton deleteButton;
 
-    public InventoryFrame(ItemController controller) {
-        this.controller = controller;
-
+    public InventoryFrame() {
         listModel = new DefaultListModel<>();
         itemList = new JList<>(listModel);
         itemList.setName("itemList");
@@ -38,8 +37,22 @@ public class InventoryFrame extends JFrame implements InventoryView {
         setLocationRelativeTo(null);
 
         initUI();
-
         updateSelectionState();
+    }
+
+    public void setController(ItemControllerInterface controller) {
+        this.controller = controller;
+    }
+
+    public ItemControllerInterface getController() {
+        return controller;
+    }
+
+    public void start() {
+        setVisible(true);
+        if (controller != null) {
+            controller.getAllItems();
+        }
     }
 
     private void initUI() {
@@ -73,7 +86,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
         buttonPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
         addButton = new JButton("Add Item");
         addButton.setName("addButton");
-        addButton.setEnabled(false); // initially disabled
+        addButton.setEnabled(false);
         addButton.addActionListener(this::onAddItem);
         addButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         addButton.setPreferredSize(new Dimension(160, 38));
@@ -107,13 +120,11 @@ public class InventoryFrame extends JFrame implements InventoryView {
 
         setContentPane(panel);
 
-        // Enable addButton only if name, quantity, price fields are filled
         DocumentListener docListener = new SimpleDocListener(this::updateAddButtonState);
         nameField.getDocument().addDocumentListener(docListener);
         quantityField.getDocument().addDocumentListener(docListener);
         priceField.getDocument().addDocumentListener(docListener);
 
-        // Sync detail fields + buttons on selection change
         itemList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 updateSelectionState();
@@ -157,21 +168,21 @@ public class InventoryFrame extends JFrame implements InventoryView {
             String desc = descField.getText().trim();
 
             if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Name is required!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+                JOptionPane.showMessageDialog(this, "Name is required!", ERROR_TITLE, JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (controller != null) {
+                Item item = new Item(String.valueOf(System.currentTimeMillis()), name, quantity, price, desc);
+                controller.addItem(item);
+                itemList.clearSelection();
+                updateSelectionState();
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
+                    JOptionPane.ERROR_MESSAGE);
         }
-
-        Item item = new Item(String.valueOf(System.currentTimeMillis()), name, quantity, price, desc);
-        controller.addItem(item);
-
-        // Clear fields and selection for the next entry
-        itemList.clearSelection();
-        updateSelectionState();
-
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
     }
-}
 
     private void onUpdateItem(ActionEvent e) {
         Item selected = itemList.getSelectedValue();
@@ -206,9 +217,12 @@ public class InventoryFrame extends JFrame implements InventoryView {
                         Double.parseDouble(priceUpdate.getText().trim()),
                         descUpdate.getText().trim()
                 );
-                controller.updateItem(updated);
+                if (controller != null) {
+                    controller.updateItem(updated);
+                }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -219,12 +233,11 @@ public class InventoryFrame extends JFrame implements InventoryView {
             JOptionPane.showMessageDialog(this, "Select an item first!", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-        // Simplify delete: no confirmation dialog to keep tests deterministic
-        controller.deleteItem(selected);
+        if (controller != null) {
+            controller.deleteItem(selected);
+        }
     }
 
-    // InventoryView interface methods
     @Override
     public void displayItems(List<Item> items) {
         SwingUtilities.invokeLater(() -> {
@@ -232,6 +245,8 @@ public class InventoryFrame extends JFrame implements InventoryView {
             for (Item item : items) {
                 listModel.addElement(item);
             }
+            itemList.clearSelection();
+            updateSelectionState();
         });
     }
 
@@ -269,16 +284,14 @@ public class InventoryFrame extends JFrame implements InventoryView {
     @Override
     public void showErrorMessage(String message, Item item) {
         SwingUtilities.invokeLater(() ->
-                JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE)
+                JOptionPane.showMessageDialog(this, message, ERROR_TITLE, JOptionPane.ERROR_MESSAGE)
         );
     }
 
-    // Method to expose listModel for testing
     public DefaultListModel<Item> getListModel() {
         return listModel;
     }
 
-    // Simple helper for document listener
     private static class SimpleDocListener implements javax.swing.event.DocumentListener {
         private final Runnable callback;
 
@@ -287,12 +300,18 @@ public class InventoryFrame extends JFrame implements InventoryView {
         }
 
         @Override
-        public void insertUpdate(javax.swing.event.DocumentEvent e) { callback.run(); }
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
+        }
 
         @Override
-        public void removeUpdate(javax.swing.event.DocumentEvent e) { callback.run(); }
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
+        }
 
         @Override
-        public void changedUpdate(javax.swing.event.DocumentEvent e) { callback.run(); }
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
+        }
     }
 }

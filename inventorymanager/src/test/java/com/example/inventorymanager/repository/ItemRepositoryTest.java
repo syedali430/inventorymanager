@@ -37,7 +37,7 @@ public class ItemRepositoryTest {
     }
 
     private ItemRepository newRepo() {
-        return new ItemRepository("localhost", port);
+        return ItemRepository.create("localhost", port);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class ItemRepositoryTest {
         System.setProperty("inventory.mongo.host", "localhost");
         System.setProperty("inventory.mongo.port", String.valueOf(customPort));
         try {
-            ItemRepository repo = new ItemRepository();
+            ItemRepository repo = ItemRepository.createDefault();
             repo.save(new Item("def", "default", 1, 1.0, "d"));
             assertEquals(1, repo.findAll().size());
         } finally {
@@ -165,4 +165,3 @@ public class ItemRepositoryTest {
         }
     }
 }
-

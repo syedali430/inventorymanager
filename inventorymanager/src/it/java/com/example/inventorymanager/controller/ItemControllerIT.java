@@ -28,13 +28,12 @@ public class ItemControllerIT {
 	public void setUp() {
 		closeable = MockitoAnnotations.openMocks(this);
 
-		itemRepository = new ItemRepository();
+		itemRepository = ItemRepository.createDefault();
 		// explicit empty the database through the repository
 		for (Item item : itemRepository.findAll()) {
 			itemRepository.delete(item.getId());
 		}
-		itemController = new ItemController(itemRepository);
-		itemController.setView(inventoryView);
+		itemController = new ItemController(itemRepository, inventoryView);
 	}
 
 	@After

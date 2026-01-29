@@ -1,7 +1,7 @@
 package com.example.inventorymanager.controller;
 
 import com.example.inventorymanager.model.Item;
-import com.example.inventorymanager.repository.ItemRepository;
+import com.example.inventorymanager.repository.ItemRepositoryInterface;
 import com.example.inventorymanager.view.InventoryView;
 
 import org.junit.Before;
@@ -20,7 +20,7 @@ import org.mockito.MockitoAnnotations;
 public class ItemControllerTest {
 
 	@Mock
-	private ItemRepository itemRepository;
+	private ItemRepositoryInterface itemRepository;
 
 	@Mock
 	private InventoryView inventoryView;

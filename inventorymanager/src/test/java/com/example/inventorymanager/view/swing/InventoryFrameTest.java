@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.example.inventorymanager.controller.ItemController;
+import com.example.inventorymanager.controller.ItemControllerInterface;
 import com.example.inventorymanager.model.Item;
 
 
@@ -35,7 +35,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 
 	@Mock
-	private ItemController itemController;
+	private ItemControllerInterface itemController;
 
 	private AutoCloseable closeable;
 
@@ -44,7 +44,8 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	protected void onSetUp() throws Exception {
 		closeable = MockitoAnnotations.openMocks(this);
 		GuiActionRunner.execute(()->{
-			inventoryFrame = new InventoryFrame(itemController);
+			inventoryFrame = new InventoryFrame();
+			inventoryFrame.setController(itemController);
 			return inventoryFrame;
 		});
 		window = new FrameFixture(robot(),inventoryFrame);

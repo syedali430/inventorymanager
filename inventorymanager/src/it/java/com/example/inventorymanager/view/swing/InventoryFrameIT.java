@@ -30,17 +30,16 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 
 	@Override
 	protected void onSetUp() throws Exception {
-		itemRepository = new ItemRepository();
+		itemRepository = ItemRepository.createDefault();
 		// Clear repository
 		for (Item item : itemRepository.findAll()) {
 			itemRepository.delete(item.getId());
 		}
 
-		itemController = new ItemController(itemRepository);
-
 		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryFrame(itemController);
-			itemController.setView(inventoryFrame);
+			inventoryFrame = new InventoryFrame();
+			itemController = new ItemController(itemRepository, inventoryFrame);
+			inventoryFrame.setController(itemController);
 			return inventoryFrame;
 		});
 		window = new FrameFixture(robot(), inventoryFrame);
@@ -57,8 +56,9 @@ public class InventoryFrameIT extends AssertJSwingJUnitTestCase {
 
 		// Create new frame to trigger loading
 		GuiActionRunner.execute(() -> {
-			inventoryFrame = new InventoryFrame(itemController);
-			itemController.setView(inventoryFrame);
+			inventoryFrame = new InventoryFrame();
+			itemController = new ItemController(itemRepository, inventoryFrame);
+			inventoryFrame.setController(itemController);
 			return inventoryFrame;
 		});
 		window = new FrameFixture(robot(), inventoryFrame);

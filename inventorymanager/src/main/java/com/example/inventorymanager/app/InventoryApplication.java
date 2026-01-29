@@ -1,18 +1,21 @@
 package com.example.inventorymanager.app;
 
 import com.example.inventorymanager.controller.ItemController;
-import com.example.inventorymanager.repository.ItemRepository;
 import com.example.inventorymanager.view.swing.InventoryFrame;
+import com.example.inventorymanager.repository.ItemRepository;
+import com.example.inventorymanager.repository.ItemRepositoryInterface;
+import com.example.inventorymanager.view.InventoryView;
 
 import javax.swing.*;
 
 public class InventoryApplication {
 
     public InventoryFrame createFrame() {
-        ItemRepository repository = new ItemRepository();
-        ItemController controller = new ItemController(repository);
-        InventoryFrame frame = new InventoryFrame(controller);
-        controller.setView(frame);
+        ItemRepositoryInterface repository = ItemRepository.createDefault();
+        InventoryFrame frame = new InventoryFrame();
+        InventoryView view = frame;
+        ItemController controller = new ItemController(repository, view);
+        frame.setController(controller);
         controller.getAllItems();
         return frame;
     }
