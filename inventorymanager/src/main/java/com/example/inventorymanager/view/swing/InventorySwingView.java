@@ -305,7 +305,10 @@ public class InventorySwingView extends JFrame implements InventoryView {
 
     @Override
     public void displayItems(List<Item> items) {
-        items.forEach(listItemModel::addElement);
+        SwingUtilities.invokeLater(() -> {
+            listItemModel.clear();
+            items.forEach(listItemModel::addElement);
+        });
     }
 
     @Override

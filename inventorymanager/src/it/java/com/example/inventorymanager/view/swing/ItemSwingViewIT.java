@@ -90,7 +90,7 @@ public class ItemSwingViewIT extends AssertJSwingJUnitTestCase{
             () -> itemController.getAllItems());
         // and verify that the view's list is populated
         assertThat(window.list().contents())
-            .containsExactly(item1.toString(), item2.toString());
+            .containsExactly(displayString(item1), displayString(item2));
     }
 
     @Test @GUITest
@@ -104,7 +104,7 @@ public class ItemSwingViewIT extends AssertJSwingJUnitTestCase{
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(window.list().contents())
-                .containsExactly(new Item("1", "Laptop", 10, 999.99, "Gaming Laptop").toString())
+                .containsExactly(displayString(new Item("1", "Laptop", 10, 999.99, "Gaming Laptop")))
         );
 
     }
@@ -148,8 +148,13 @@ public class ItemSwingViewIT extends AssertJSwingJUnitTestCase{
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
             assertThat(window.list().contents())
-                .containsExactly(new Item("1", "Updated Laptop", 15, 799.99, "Updated Gaming Laptop").toString())
+                .containsExactly(displayString(new Item("1", "Updated Laptop", 15, 799.99, "Updated Gaming Laptop")))
         );
+    }
+
+    private static String displayString(Item item) {
+        return item.getId() + " - " + item.getName() + " - " + item.getQuantity() + " - "
+                + item.getPrice() + " - " + item.getDescription();
     }
 
 }

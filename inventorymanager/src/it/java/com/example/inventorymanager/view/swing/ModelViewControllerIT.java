@@ -10,10 +10,10 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
 import org.awaitility.Awaitility;
-import org.junit.ClassRule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testcontainers.containers.MongoDBContainer;
 
 import com.example.inventorymanager.repository.mongo.ItemMongoRepository;
 import com.example.inventorymanager.controller.ItemController;
@@ -21,12 +21,16 @@ import com.example.inventorymanager.model.Item;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+
+import java.net.InetSocketAddress;
+
 @RunWith(GUITestRunner.class)
 public class ModelViewControllerIT extends AssertJSwingJUnitTestCase{
 
-    @ClassRule
-    public static final MongoDBContainer mongo =
-        new MongoDBContainer("mongo:4.4.3");
+    private static MongoServer mongoServer;
+    private static InetSocketAddress serverAddress;
 
     private MongoClient mongoClient;
 
@@ -37,14 +41,26 @@ public class ModelViewControllerIT extends AssertJSwingJUnitTestCase{
     public static final String ITEM_COLLECTION_NAME = "item";
     public static final String INVENTORY_DB_NAME = "inventory";
 
+    @BeforeClass
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        serverAddress = mongoServer.bind();
+    }
+
+    @AfterClass
+    public static void stopMongo() {
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
+        }
+    }
+
 
     @Override
     protected void onSetUp() {
 
         mongoClient = new MongoClient(
                 new ServerAddress(
-                    mongo.getHost(),
-                    mongo.getFirstMappedPort()));
+                    serverAddress));
             itemRepository = new ItemMongoRepository(mongoClient,INVENTORY_DB_NAME,ITEM_COLLECTION_NAME);
             // explicit empty the database through the repository
             for (Item item : itemRepository.findAll()) {
@@ -123,10 +139,13 @@ public class ModelViewControllerIT extends AssertJSwingJUnitTestCase{
 
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> 
             assertThat(window.list().contents())
-                .containsExactly(new Item("1", "Updated Laptop", 15, 899.99, "Updated Gaming Laptop").toString())
+                .containsExactly(displayString(new Item("1", "Updated Laptop", 15, 899.99, "Updated Gaming Laptop")))
         );
     }
 
-
+    private static String displayString(Item item) {
+        return item.getId() + " - " + item.getName() + " - " + item.getQuantity() + " - "
+                + item.getPrice() + " - " + item.getDescription();
+    }
 
 }

@@ -5,7 +5,7 @@ import javax.swing.JFrame;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.launcher.ApplicationLauncher.*;
 
-import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
 
 import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.GenericTypeMatcher;
@@ -14,23 +14,27 @@ import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.junit.runner.GUITestRunner;
 import org.assertj.swing.junit.testcase.AssertJSwingJUnitTestCase;
+import org.awaitility.Awaitility;
 import org.bson.Document;
-import org.junit.ClassRule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testcontainers.containers.MongoDBContainer;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.model.Filters;
 
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import java.net.InetSocketAddress;
 
 //1Laptop
 
 @RunWith(GUITestRunner.class)
 public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 
-    @ClassRule
-    public static final MongoDBContainer mongo = new MongoDBContainer("mongo:4.4.3");
+    private static MongoServer mongoServer;
+    private static InetSocketAddress serverAddress;
 
     private static final String DB_NAME = "test-db";
     private static final String COLLECTION_NAME = "test-collection";
@@ -50,11 +54,24 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 
     private FrameFixture window;
 
+    @BeforeClass
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        serverAddress = mongoServer.bind();
+    }
+
+    @AfterClass
+    public static void stopMongo() {
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
+        }
+    }
+
     @Override
     protected void onSetUp() throws Exception {
 
-        String containerIpAddress = mongo.getContainerIpAddress();
-        Integer mappedPort = mongo.getFirstMappedPort();
+        String containerIpAddress = "localhost";
+        Integer mappedPort = serverAddress.getPort();
         mongoClient = new MongoClient(containerIpAddress, mappedPort);
         // always start with an empty database
         mongoClient.getDatabase(DB_NAME).drop();
@@ -82,6 +99,7 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 
     @Test @GUITest
     public void testOnStartAllDatabaseElementsAreShown() {
+        waitForInitialItemsLoaded();
         assertThat(window.list().contents())
         .anySatisfy(e -> assertThat(e).contains(ITEM_FIXTURE_1_ID, ITEM_FIXTURE_1_NAME,String.valueOf(ITEM_FIXTURE_1_QUALITY),String.valueOf(ITEM_FIXTURE_1_PRICE), ITEM_FIXTURE_1_DESCRIPTION))
         .anySatisfy(e -> assertThat(e).contains(ITEM_FIXTURE_2_ID,ITEM_FIXTURE_2_NAME, String.valueOf(ITEM_FIXTURE_2_QUALITY), String.valueOf(ITEM_FIXTURE_2_PRICE), ITEM_FIXTURE_2_DESCRIPTION));
@@ -89,55 +107,66 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 
     @Test @GUITest
     public void testAddButtonSuccess() {
+        waitForInitialItemsLoaded();
         window.textBox("idTextBox").enterText("10");
         window.textBox("nameTextBox").enterText("Mobile");
         window.textBox("quantityTextBox").enterText("15");
         window.textBox("priceTextBox").enterText("599.99");
         window.textBox("descriptionTextBox").enterText("Gaming Phone");
         window.button(JButtonMatcher.withText("Add Item")).click();
-        assertThat(window.list().contents())
-            .anySatisfy(e -> assertThat(e).contains("10","Mobile","15","599.9","Gaming Phone"));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.list().contents())
+                        .anySatisfy(e -> assertThat(e).contains("10", "Mobile", "15", "599.99", "Gaming Phone"))
+        );
     }
 
     @Test @GUITest
     public void testAddButtonError() {
+        waitForInitialItemsLoaded();
         window.textBox("idTextBox").enterText(ITEM_FIXTURE_1_ID);
         window.textBox("nameTextBox").enterText("new one");
         window.textBox("quantityTextBox").enterText("15");
         window.textBox("priceTextBox").enterText("599.99");
         window.textBox("descriptionTextBox").enterText("Gaming Laptop");
         window.button(JButtonMatcher.withText("Add Item")).click();
-        assertThat(window.label("errorMessageLabel").text())
-            .contains(ITEM_FIXTURE_1_ID, ITEM_FIXTURE_1_NAME,String.valueOf(ITEM_FIXTURE_1_QUALITY),String.valueOf(ITEM_FIXTURE_1_PRICE), ITEM_FIXTURE_1_DESCRIPTION);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.label("errorMessageLabel").text())
+                        .contains(ITEM_FIXTURE_1_ID, ITEM_FIXTURE_1_NAME, String.valueOf(ITEM_FIXTURE_1_QUALITY),
+                                String.valueOf(ITEM_FIXTURE_1_PRICE), ITEM_FIXTURE_1_DESCRIPTION)
+        );
     }
 
     @Test @GUITest
     public void testDeleteButtonSuccess() {
-        window.list("itemList")
-            .selectItem(Pattern.compile(".*" + ITEM_FIXTURE_1_NAME + ".*"));
+        waitForInitialItemsLoaded();
+        window.list("itemList").selectItem(0);
         window.button(JButtonMatcher.withText("Delete Selected")).click();
-        assertThat(window.list().contents())
-            .noneMatch(e -> e.contains(".*" + ITEM_FIXTURE_1_NAME + ".*"));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.list().contents())
+                        .noneMatch(e -> e.contains(ITEM_FIXTURE_1_ID) && e.contains(ITEM_FIXTURE_1_NAME))
+        );
     }
 
     @Test @GUITest
     public void testDeleteButtonError() {
-        // select the item in the list...
-        window.list("itemList")
-            .selectItem(Pattern.compile(".*" + ITEM_FIXTURE_1_NAME + ".*"));
+        waitForInitialItemsLoaded();
+        window.list("itemList").selectItem(0);
         // ... in the meantime, manually remove the item from the database
         removeTestItemFromDatabase(ITEM_FIXTURE_1_ID);
         // now press the delete button
         window.button(JButtonMatcher.withText("Delete Selected")).click();
         // and verify an error is shown
-        assertThat(window.label("errorMessageLabel").text())
-            .contains(ITEM_FIXTURE_1_ID, ITEM_FIXTURE_1_NAME,String.valueOf(ITEM_FIXTURE_1_QUALITY),String.valueOf(ITEM_FIXTURE_1_PRICE), ITEM_FIXTURE_1_DESCRIPTION);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.label("errorMessageLabel").text())
+                        .contains(ITEM_FIXTURE_1_ID, ITEM_FIXTURE_1_NAME, String.valueOf(ITEM_FIXTURE_1_QUALITY),
+                                String.valueOf(ITEM_FIXTURE_1_PRICE), ITEM_FIXTURE_1_DESCRIPTION)
+        );
     }
 
     @Test @GUITest
     public void testUpdateButtonSuccess() {
-        window.list("itemList")
-            .selectItem(Pattern.compile(".*" + ITEM_FIXTURE_1_NAME + ".*"));
+        waitForInitialItemsLoaded();
+        window.list("itemList").selectItem(0);
 
         window.textBox("nameTextBox").setText("Updated Laptop");
         window.textBox("quantityTextBox").setText("20");
@@ -146,12 +175,17 @@ public class ItemSwingAppE2E extends AssertJSwingJUnitTestCase {
 
         window.button(JButtonMatcher.withText("Update Selected")).click();
 
-        // Validate updated item in list
-        assertThat(window.list().contents())
-            .anySatisfy(e -> assertThat(e).contains("Updated Laptop", "20", "1099.99", "Updated description"));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.list().contents())
+                        .anySatisfy(e -> assertThat(e).contains("Updated Laptop", "20", "1099.99", "Updated description"))
+        );
     }
 
-
+    private void waitForInitialItemsLoaded() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(window.list().contents()).hasSizeGreaterThanOrEqualTo(2)
+        );
+    }
 
     private void addTestItemToDatabase(String id, String name, int quantity, double price, String description) {
         mongoClient.getDatabase(DB_NAME).getCollection(COLLECTION_NAME).insertOne(new Document()

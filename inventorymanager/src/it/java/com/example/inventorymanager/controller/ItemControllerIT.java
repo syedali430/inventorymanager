@@ -4,7 +4,9 @@ import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -15,7 +17,10 @@ import com.example.inventorymanager.repository.mongo.ItemMongoRepository;
 import com.example.inventorymanager.view.InventoryView;
 import com.mongodb.MongoClient;
 
-//docker run -p 27017:27017 --rm mongo:4.4.3
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+
+import java.net.InetSocketAddress;
 
 public class ItemControllerIT {
 
@@ -31,13 +36,27 @@ public class ItemControllerIT {
     public static final String ITEM_COLLECTION_NAME = "item";
     public static final String INVENTORY_DB_NAME = "inventory";
 
-    private static int mongoPort = Integer.parseInt(System.getProperty("mongo.port", "27017"));
+    private static MongoServer mongoServer;
+    private static InetSocketAddress serverAddress;
+
+    @BeforeClass
+    public static void startMongo() {
+        mongoServer = new MongoServer(new MemoryBackend());
+        serverAddress = mongoServer.bind();
+    }
+
+    @AfterClass
+    public static void stopMongo() {
+        if (mongoServer != null) {
+            mongoServer.shutdownNow();
+        }
+    }
 
     @Before
     public void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
 
-        itemRepository = new ItemMongoRepository(new MongoClient("localhost", mongoPort), INVENTORY_DB_NAME,
+        itemRepository = new ItemMongoRepository(new MongoClient("localhost", serverAddress.getPort()), INVENTORY_DB_NAME,
                 ITEM_COLLECTION_NAME);
         // explicit empty the database through the repository
         for (Item item : itemRepository.findAll()) {

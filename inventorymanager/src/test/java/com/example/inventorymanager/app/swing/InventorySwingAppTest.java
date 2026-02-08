@@ -16,6 +16,7 @@ import org.awaitility.Awaitility;
 import org.junit.BeforeClass;
 import org.junit.Assume;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.example.inventorymanager.view.swing.InventorySwingView;
 import de.bwaldvogel.mongo.MongoServer;
@@ -112,6 +113,17 @@ public class InventorySwingAppTest {
         } finally {
             logger.setLevel(previous);
         }
+    }
+
+    @Test
+    public void testLoadInitialItemsCallsControllerWhenNoError() {
+        System.clearProperty("inventory.test.skipInitialLoad");
+        InventorySwingApp app = new InventorySwingApp();
+        com.example.inventorymanager.controller.ItemController controller =
+                Mockito.mock(com.example.inventorymanager.controller.ItemController.class);
+        app.loadInitialItems(controller);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> Mockito.verify(controller).getAllItems());
     }
 
     @Test
