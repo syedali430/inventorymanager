@@ -148,6 +148,21 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	}
 
 	@Test
+	public void testOnAddItemWithNullControllerDoesNothing() {
+	    GuiActionRunner.execute(() -> {
+	        inventoryFrame.setController(null);
+	        return null;
+	    });
+	    window.textBox("nameField").setText("Manual Add");
+	    window.textBox("quantityField").setText("4");
+	    window.textBox("priceField").setText("10.5");
+	    window.textBox("descField").setText("No controller");
+	    invokePrivateAction("onAddItem");
+	    robot().waitForIdle();
+	    assertThat(window.list("itemList").contents()).isEmpty();
+	}
+
+	@Test
 	public void testGetControllerReturnsSetController() {
 	    assertThat(inventoryFrame.getController()).isSameAs(itemController);
 	}

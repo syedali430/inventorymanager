@@ -211,9 +211,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
                     priceField.getText().trim(),
                     descField.getText().trim()
             );
-            if (updated != null && controller != null) {
-                controller.updateItem(updated);
-            }
+            updateController(updated);
             return;
         }
 
@@ -243,9 +241,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
                     priceUpdate.getText().trim(),
                     descUpdate.getText().trim()
             );
-            if (updated != null && controller != null) {
-                controller.updateItem(updated);
-            }
+            updateController(updated);
         }
     }
 
@@ -262,6 +258,12 @@ public class InventoryFrame extends JFrame implements InventoryView {
             JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
                     JOptionPane.ERROR_MESSAGE);
             return null;
+        }
+    }
+
+    private void updateController(Item updated) {
+        if (updated != null && controller != null) {
+            controller.updateItem(updated);
         }
     }
 
