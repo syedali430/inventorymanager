@@ -204,15 +204,20 @@ public class InventoryFrame extends JFrame implements InventoryView {
         }
 
         if (Boolean.getBoolean("inventory.test.skipUpdateDialog")) {
-            Item updated = new Item(
-                    selected.getId(),
-                    nameField.getText().trim(),
-                    Integer.parseInt(quantityField.getText().trim()),
-                    Double.parseDouble(priceField.getText().trim()),
-                    descField.getText().trim()
-            );
-            if (controller != null) {
-                controller.updateItem(updated);
+            try {
+                Item updated = new Item(
+                        selected.getId(),
+                        nameField.getText().trim(),
+                        Integer.parseInt(quantityField.getText().trim()),
+                        Double.parseDouble(priceField.getText().trim()),
+                        descField.getText().trim()
+                );
+                if (controller != null) {
+                    controller.updateItem(updated);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
+                        JOptionPane.ERROR_MESSAGE);
             }
             return;
         }

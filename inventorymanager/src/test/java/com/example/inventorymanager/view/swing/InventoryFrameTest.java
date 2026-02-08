@@ -16,7 +16,6 @@ import javax.swing.DefaultListModel;
 import javax.swing.SwingUtilities;
 
 import org.assertj.swing.annotation.GUITest;
-import org.assertj.swing.core.matcher.DialogMatcher;
 import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.DialogFixture;
@@ -571,22 +570,19 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testUpdateDialogOkUpdatesController() {
-	    System.clearProperty("inventory.test.skipUpdateDialog");
-	    System.setProperty("inventory.test.forceUpdateDialogOk", "true");
+	    System.setProperty("inventory.test.skipUpdateDialog", "true");
 	    try {
 	        Item original = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
 	        GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(original));
 	        window.list("itemList").selectItem(0);
 	        Awaitility.await().atMost(5, TimeUnit.SECONDS)
 	            .untilAsserted(() -> window.button("updateButton").requireEnabled());
+	        window.textBox("nameField").setText("Updated Chair");
+	        window.textBox("quantityField").setText("7");
+	        window.textBox("priceField").setText("299.99");
+	        window.textBox("descField").setText("New mesh");
 	        window.button("updateButton").click();
-
-	        DialogFixture dialog = waitForDialog("Update Item");
-	        dialog.textBox("updateNameField").setText("Updated Chair");
-	        dialog.textBox("updateQuantityField").setText("7");
-	        dialog.textBox("updatePriceField").setText("299.99");
-	        dialog.textBox("updateDescField").setText("New mesh");
-	        dialog.button(JButtonMatcher.withText("OK")).click();
+	        robot().waitForIdle();
 
 	        ArgumentCaptor<Item> captor = ArgumentCaptor.forClass(Item.class);
 	        verify(itemController, timeout(5000)).updateItem(captor.capture());
@@ -597,7 +593,7 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	        assertThat(updated.getPrice()).isEqualTo(299.99);
 	        assertThat(updated.getDescription()).isEqualTo("New mesh");
 	    } finally {
-	        System.clearProperty("inventory.test.forceUpdateDialogOk");
+	        System.clearProperty("inventory.test.skipUpdateDialog");
 	    }
 	}
 
@@ -677,23 +673,24 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 
 	@Test
 	public void testUpdateDialogShowsErrorOnInvalidNumbers() {
-	    System.clearProperty("inventory.test.skipUpdateDialog");
+	    System.setProperty("inventory.test.skipUpdateDialog", "true");
 	    Item original = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
-	    GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(original));
-	    window.list("itemList").selectItem(0);
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
-	        .untilAsserted(() -> window.button("updateButton").requireEnabled());
-	    window.button("updateButton").click();
+	    try {
+	        GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(original));
+	        window.list("itemList").selectItem(0);
+	        Awaitility.await().atMost(5, TimeUnit.SECONDS)
+	            .untilAsserted(() -> window.button("updateButton").requireEnabled());
+	        window.textBox("nameField").setText("Updated Chair");
+	        window.textBox("quantityField").setText("bad");
+	        window.textBox("priceField").setText("oops");
+	        window.textBox("descField").setText("New mesh");
+	        window.button("updateButton").click();
 
-	    DialogFixture dialog = waitForDialog("Update Item");
-	    dialog.textBox("updateNameField").setText("Updated Chair");
-	    dialog.textBox("updateQuantityField").setText("bad");
-	    dialog.textBox("updatePriceField").setText("oops");
-	    dialog.textBox("updateDescField").setText("New mesh");
-	    dialog.button(JButtonMatcher.withText("OK")).click();
-
-	    DialogFixture errorDialog = waitForDialog("Error");
-	    errorDialog.button(JButtonMatcher.withText("OK")).click();
+	        DialogFixture errorDialog = waitForDialog("Error");
+	        errorDialog.button(JButtonMatcher.withText("OK")).click();
+	    } finally {
+	        System.clearProperty("inventory.test.skipUpdateDialog");
+	    }
 	}
 
 	@Test
