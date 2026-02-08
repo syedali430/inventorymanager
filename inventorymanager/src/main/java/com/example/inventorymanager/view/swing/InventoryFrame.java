@@ -35,7 +35,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
 
         setTitle("Inventory Manager");
         setSize(800, 550);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         initUI();

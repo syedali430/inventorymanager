@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.timeout;
 
+import java.awt.Dialog;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +19,6 @@ import org.assertj.swing.annotation.GUITest;
 import org.assertj.swing.core.matcher.DialogMatcher;
 import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.assertj.swing.edt.GuiActionRunner;
-import org.assertj.swing.finder.WindowFinder;
 import org.assertj.swing.fixture.DialogFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
@@ -84,11 +85,21 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	}
 
 	private DialogFixture waitForDialog(String title) {
-		final DialogFixture[] dialog = new DialogFixture[1];
+		final Dialog[] dialog = new Dialog[1];
+		robot().waitForIdle();
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-			dialog[0] = WindowFinder.findDialog(DialogMatcher.withTitle(title)).using(robot());
+			for (Window openWindow : Window.getWindows()) {
+				if (openWindow instanceof Dialog) {
+					Dialog openDialog = (Dialog) openWindow;
+					if (openDialog.isShowing() && title.equals(openDialog.getTitle())) {
+						dialog[0] = openDialog;
+						return;
+					}
+				}
+			}
+			throw new AssertionError("Dialog not visible: " + title);
 		});
-		return dialog[0];
+		return new DialogFixture(robot(), dialog[0]);
 	}
 
 
