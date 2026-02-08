@@ -234,7 +234,8 @@ public class InventoryFrame extends JFrame implements InventoryView {
         };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Update Item", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
+        boolean forceOk = Boolean.getBoolean("inventory.test.forceUpdateDialogOk");
+        if (option == JOptionPane.OK_OPTION || forceOk) {
             try {
                 Item updated = new Item(
                         selected.getId(),

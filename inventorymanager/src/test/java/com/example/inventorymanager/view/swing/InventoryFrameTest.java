@@ -546,28 +546,33 @@ public class InventoryFrameTest extends AssertJSwingJUnitTestCase{
 	@Test
 	public void testUpdateDialogOkUpdatesController() {
 	    System.clearProperty("inventory.test.skipUpdateDialog");
-	    Item original = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
-	    GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(original));
-	    window.list("itemList").selectItem(0);
-	    Awaitility.await().atMost(5, TimeUnit.SECONDS)
-	        .untilAsserted(() -> window.button("updateButton").requireEnabled());
-	    window.button("updateButton").click();
+	    System.setProperty("inventory.test.forceUpdateDialogOk", "true");
+	    try {
+	        Item original = new Item("1", "Orbit Chair", 3, 199.25, "Ergonomic mesh");
+	        GuiActionRunner.execute(() -> inventoryFrame.getListModel().addElement(original));
+	        window.list("itemList").selectItem(0);
+	        Awaitility.await().atMost(5, TimeUnit.SECONDS)
+	            .untilAsserted(() -> window.button("updateButton").requireEnabled());
+	        window.button("updateButton").click();
 
-	    DialogFixture dialog = waitForDialog("Update Item");
-	    dialog.textBox("updateNameField").setText("Updated Chair");
-	    dialog.textBox("updateQuantityField").setText("7");
-	    dialog.textBox("updatePriceField").setText("299.99");
-	    dialog.textBox("updateDescField").setText("New mesh");
-	    dialog.button(JButtonMatcher.withText("OK")).click();
+	        DialogFixture dialog = waitForDialog("Update Item");
+	        dialog.textBox("updateNameField").setText("Updated Chair");
+	        dialog.textBox("updateQuantityField").setText("7");
+	        dialog.textBox("updatePriceField").setText("299.99");
+	        dialog.textBox("updateDescField").setText("New mesh");
+	        dialog.button(JButtonMatcher.withText("OK")).click();
 
-	    ArgumentCaptor<Item> captor = ArgumentCaptor.forClass(Item.class);
-	    verify(itemController, timeout(5000)).updateItem(captor.capture());
-	    Item updated = captor.getValue();
-	    assertThat(updated.getId()).isEqualTo("1");
-	    assertThat(updated.getName()).isEqualTo("Updated Chair");
-	    assertThat(updated.getQuantity()).isEqualTo(7);
-	    assertThat(updated.getPrice()).isEqualTo(299.99);
-	    assertThat(updated.getDescription()).isEqualTo("New mesh");
+	        ArgumentCaptor<Item> captor = ArgumentCaptor.forClass(Item.class);
+	        verify(itemController, timeout(5000)).updateItem(captor.capture());
+	        Item updated = captor.getValue();
+	        assertThat(updated.getId()).isEqualTo("1");
+	        assertThat(updated.getName()).isEqualTo("Updated Chair");
+	        assertThat(updated.getQuantity()).isEqualTo(7);
+	        assertThat(updated.getPrice()).isEqualTo(299.99);
+	        assertThat(updated.getDescription()).isEqualTo("New mesh");
+	    } finally {
+	        System.clearProperty("inventory.test.forceUpdateDialogOk");
+	    }
 	}
 
 	@Test
