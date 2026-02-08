@@ -204,20 +204,15 @@ public class InventoryFrame extends JFrame implements InventoryView {
         }
 
         if (Boolean.getBoolean("inventory.test.skipUpdateDialog")) {
-            try {
-                Item updated = new Item(
-                        selected.getId(),
-                        nameField.getText().trim(),
-                        Integer.parseInt(quantityField.getText().trim()),
-                        Double.parseDouble(priceField.getText().trim()),
-                        descField.getText().trim()
-                );
-                if (controller != null) {
-                    controller.updateItem(updated);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
-                        JOptionPane.ERROR_MESSAGE);
+            Item updated = createUpdatedItem(
+                    selected.getId(),
+                    nameField.getText().trim(),
+                    quantityField.getText().trim(),
+                    priceField.getText().trim(),
+                    descField.getText().trim()
+            );
+            if (updated != null && controller != null) {
+                controller.updateItem(updated);
             }
             return;
         }
@@ -241,21 +236,32 @@ public class InventoryFrame extends JFrame implements InventoryView {
         int option = JOptionPane.showConfirmDialog(this, message, "Update Item", JOptionPane.OK_CANCEL_OPTION);
         boolean forceOk = Boolean.getBoolean("inventory.test.forceUpdateDialogOk");
         if (option == JOptionPane.OK_OPTION || forceOk) {
-            try {
-                Item updated = new Item(
-                        selected.getId(),
-                        nameUpdate.getText().trim(),
-                        Integer.parseInt(quantityUpdate.getText().trim()),
-                        Double.parseDouble(priceUpdate.getText().trim()),
-                        descUpdate.getText().trim()
-                );
-                if (controller != null) {
-                    controller.updateItem(updated);
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
-                        JOptionPane.ERROR_MESSAGE);
+            Item updated = createUpdatedItem(
+                    selected.getId(),
+                    nameUpdate.getText().trim(),
+                    quantityUpdate.getText().trim(),
+                    priceUpdate.getText().trim(),
+                    descUpdate.getText().trim()
+            );
+            if (updated != null && controller != null) {
+                controller.updateItem(updated);
             }
+        }
+    }
+
+    private Item createUpdatedItem(String id, String name, String quantityText, String priceText, String description) {
+        try {
+            return new Item(
+                    id,
+                    name,
+                    Integer.parseInt(quantityText),
+                    Double.parseDouble(priceText),
+                    description
+            );
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Quantity and Price must be numeric!", ERROR_TITLE,
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
         }
     }
 
