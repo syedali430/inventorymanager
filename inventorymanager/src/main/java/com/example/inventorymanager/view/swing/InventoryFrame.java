@@ -232,8 +232,7 @@ public class InventoryFrame extends JFrame implements InventoryView {
         };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Update Item", JOptionPane.OK_CANCEL_OPTION);
-        boolean forceOk = Boolean.getBoolean("inventory.test.forceUpdateDialogOk");
-        if (option == JOptionPane.OK_OPTION || forceOk) {
+        if (shouldApplyUpdate(option)) {
             Item updated = createUpdatedItem(
                     selected.getId(),
                     nameUpdate.getText().trim(),
@@ -243,6 +242,10 @@ public class InventoryFrame extends JFrame implements InventoryView {
             );
             updateController(updated);
         }
+    }
+
+    private boolean shouldApplyUpdate(int option) {
+        return option == JOptionPane.OK_OPTION || Boolean.getBoolean("inventory.test.forceUpdateDialogOk");
     }
 
     private Item createUpdatedItem(String id, String name, String quantityText, String priceText, String description) {
