@@ -15,6 +15,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.release>8</maven.compiler.release>
 		<testcontainers.version>1.15.1</testcontainers.version>
 		<junit.version>4.13.2</junit.version>
 		<cucumber.version>5.5.0</cucumber.version>
@@ -36,6 +37,7 @@
 		<io.fabric8.version>0.40.2</io.fabric8.version>
 		<docker.skip>true</docker.skip>
 		<skipITs>true</skipITs>
+		<pitest.skip>true</pitest.skip>
 
 
 		<!-- For each rule to be ignored, add another eXX and two corresponding
@@ -73,11 +75,6 @@
 		<sonar.issue.ignore.multicriteria.e14.resourceKey>
 			**/*E2E.java
 		</sonar.issue.ignore.multicriteria.e14.resourceKey>
-
-		<sonar.coverage.exclusions>
-			**/view/swing/**,**/app/InventoryApplication.java,**/*Test*.java,**/*IT*.java,**/*E2E*.java
-		</sonar.coverage.exclusions>
-		<sonar.exclusions>**/view/swing/**</sonar.exclusions>
 
 		<sonar.junit.reportPaths>
 			${project.build.directory}/surefire-reports,
@@ -186,6 +183,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.1</version>
 				<configuration>
+					<argLine>${argLine} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED</argLine>
 					<skipITs>${skipITs}</skipITs>
 					<systemPropertyVariables>
 						<mongo.port>${mongo.mapped.port}</mongo.port>
@@ -277,12 +275,21 @@
 				</executions>
 
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+				<configuration>
+					<release>${maven.compiler.release}</release>
+				</configuration>
+			</plugin>
 			<!-- Surefire Plugin for Unit Testing -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire.version}</version>
 				<configuration>
+					<argLine>${argLine} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED</argLine>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -304,6 +311,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<skip>${pitest.skip}</skip>
 					<targetClasses>
 						<param>com.example.inventorymanager.*.*</param>
 					</targetClasses>
@@ -391,11 +399,6 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacoco.verion}</version>
-				<configuration>
-					<excludes>
-						<exclude>**/com/example/inventorymanager/app/**</exclude>
-					</excludes>
-				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -439,6 +442,13 @@
 		</profile>
 
 		<profile>
+			<id>mutation</id>
+			<properties>
+				<pitest.skip>false</pitest.skip>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>skip-testcontainers</id>
 			<build>
 				<plugins>
@@ -473,11 +483,6 @@
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
 						<version>0.8.5</version>
-						<configuration>
-							<excludes>
-								<exclude>**/com/example/inventorymanager/app/**</exclude>
-							</excludes>
-						</configuration>
 						<executions>
 							<execution>
 								<goals>

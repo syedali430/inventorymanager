@@ -79,7 +79,7 @@ public class ItemControllerTest {
 			thenReturn(java.util.Optional.of(existingItem));
 		itemController.addItem(itemToAdd);
 		verify(inventoryView)
-			.showErrorMessage("Already existing item with id 1", itemToAdd);
+			.showErrorMessage("Already existing item with id 1", existingItem);
 		verifyNoMoreInteractions(ignoreStubs(itemRepository));
 	}
 

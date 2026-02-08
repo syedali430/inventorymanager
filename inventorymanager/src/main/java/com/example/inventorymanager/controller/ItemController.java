@@ -4,7 +4,7 @@ import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.repository.ItemRepositoryInterface;
 import com.example.inventorymanager.view.InventoryView;
 
-public class ItemController implements ItemControllerInterface {
+public class ItemController {
 
     private final ItemRepositoryInterface itemRepository;
     private final InventoryView inventoryView;
@@ -14,10 +14,10 @@ public class ItemController implements ItemControllerInterface {
         this.inventoryView = inventoryView;
     }
 
-    @Override
     public synchronized void addItem(Item item) {
-        if (itemRepository.findById(item.getId()).isPresent()) {
-            inventoryView.showErrorMessage("Already existing item with id " + item.getId(), item);
+        java.util.Optional<Item> existingItem = itemRepository.findById(item.getId());
+        if (existingItem.isPresent()) {
+            inventoryView.showErrorMessage("Already existing item with id " + item.getId(), existingItem.get());
             return;
         }
 
@@ -25,12 +25,10 @@ public class ItemController implements ItemControllerInterface {
         inventoryView.addItem(item);
     }
 
-    @Override
     public void getAllItems() {
         inventoryView.displayItems(itemRepository.findAll());
     }
 
-    @Override
     public synchronized void updateItem(Item item) {
         if (!itemRepository.findById(item.getId()).isPresent()) {
             inventoryView.showErrorMessage("No existing item with id " + item.getId(), item);
@@ -41,7 +39,6 @@ public class ItemController implements ItemControllerInterface {
         inventoryView.updateItem(item);
     }
 
-    @Override
     public synchronized void deleteItem(Item item) {
         if (!itemRepository.findById(item.getId()).isPresent()) {
             inventoryView.showErrorMessage("No existing item with id " + item.getId(), item);

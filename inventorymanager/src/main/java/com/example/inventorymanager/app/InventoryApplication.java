@@ -10,28 +10,30 @@ import javax.swing.*;
 
 public class InventoryApplication {
 
+    static boolean applyLookAndFeel(String className) {
+        try {
+            UIManager.setLookAndFeel(className);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public InventoryFrame createFrame() {
         ItemRepositoryInterface repository = ItemRepository.createDefault();
         InventoryFrame frame = new InventoryFrame();
         InventoryView view = frame;
         ItemController controller = new ItemController(repository, view);
         frame.setController(controller);
-        controller.getAllItems();
         return frame;
     }
 
     public static void main(String[] args) {
 
-        try {
-            UIManager.setLookAndFeel(
-                UIManager.getSystemLookAndFeelClassName()
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        applyLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         SwingUtilities.invokeLater(
-            () -> new InventoryApplication().createFrame().setVisible(true)
+            () -> new InventoryApplication().createFrame().start()
         );
     }
 }

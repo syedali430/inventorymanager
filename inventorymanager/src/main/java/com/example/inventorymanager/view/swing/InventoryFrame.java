@@ -1,6 +1,6 @@
 package com.example.inventorymanager.view.swing;
 
-import com.example.inventorymanager.controller.ItemControllerInterface;
+import com.example.inventorymanager.controller.ItemController;
 import com.example.inventorymanager.model.Item;
 import com.example.inventorymanager.view.InventoryView;
 
@@ -9,12 +9,14 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InventoryFrame extends JFrame implements InventoryView {
 
     private static final String ERROR_TITLE = "Error";
 
-    private transient ItemControllerInterface controller;
+    private transient ItemController controller;
     private DefaultListModel<Item> listModel;
     private JList<Item> itemList;
 
@@ -40,18 +42,28 @@ public class InventoryFrame extends JFrame implements InventoryView {
         updateSelectionState();
     }
 
-    public void setController(ItemControllerInterface controller) {
+    public void setController(ItemController controller) {
         this.controller = controller;
     }
 
-    public ItemControllerInterface getController() {
+    public ItemController getController() {
         return controller;
     }
 
     public void start() {
         setVisible(true);
-        if (controller != null) {
-            controller.getAllItems();
+        if (controller != null && !Boolean.getBoolean("inventory.test.skipInitialLoad")) {
+            Thread loader = new Thread(() -> {
+                try {
+                    controller.getAllItems();
+                } catch (Exception e) {
+                    if (!Boolean.getBoolean("inventory.test.silentLoadErrors")) {
+                        Logger.getLogger(InventoryFrame.class.getName()).log(Level.SEVERE, "Exception", e);
+                    }
+                }
+            }, "inventory-load-items");
+            loader.setDaemon(true);
+            loader.start();
         }
     }
 

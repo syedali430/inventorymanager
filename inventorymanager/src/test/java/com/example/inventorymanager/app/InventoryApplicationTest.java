@@ -4,6 +4,7 @@ import com.example.inventorymanager.view.swing.InventoryFrame;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.Test;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.awt.*;
@@ -17,6 +18,7 @@ public class InventoryApplicationTest {
         int port = mongoServer.getLocalAddress().getPort();
         System.setProperty("inventory.mongo.host", "localhost");
         System.setProperty("inventory.mongo.port", String.valueOf(port));
+        System.setProperty("inventory.test.skipInitialLoad", "true");
 
         try {
             InventoryApplication.main(new String[]{});
@@ -37,7 +39,13 @@ public class InventoryApplicationTest {
         } finally {
             System.clearProperty("inventory.mongo.host");
             System.clearProperty("inventory.mongo.port");
+            System.clearProperty("inventory.test.skipInitialLoad");
             mongoServer.shutdownNow();
         }
+    }
+
+    @Test
+    public void testApplyLookAndFeelReturnsFalseOnInvalidClass() {
+        assertFalse(InventoryApplication.applyLookAndFeel("not.a.real.LookAndFeel"));
     }
 }
