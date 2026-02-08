@@ -18,7 +18,6 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import com.example.inventorymanager.view.swing.InventorySwingView;
-import com.mongodb.MongoClient;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 
@@ -180,18 +179,20 @@ public class InventorySwingAppTest {
         private final List<String> messages = new ArrayList<>();
 
         @Override
-        public void publish(LogRecord record) {
-            if (record != null && record.getMessage() != null) {
-                messages.add(record.getMessage());
+        public void publish(LogRecord logRecord) {
+            if (logRecord != null && logRecord.getMessage() != null) {
+                messages.add(logRecord.getMessage());
             }
         }
 
         @Override
         public void flush() {
+            // no-op: messages are kept in memory for assertions
         }
 
         @Override
         public void close() throws SecurityException {
+            // no-op: no external resources to release
         }
     }
 }
