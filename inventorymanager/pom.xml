@@ -1,0 +1,558 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.example</groupId>
+	<artifactId>inventorymanager</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>inventorymanager</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.release>8</maven.compiler.release>
+		<testcontainers.version>1.15.1</testcontainers.version>
+		<junit.version>4.13.2</junit.version>
+		<cucumber.version>5.5.0</cucumber.version>
+		<pitest-maven-version>1.5.2</pitest-maven-version>
+		<assertj-version>3.17.1</assertj-version>
+		<mokito.version>4.4.0</mokito.version>
+		<mongodriver.version>3.12.7</mongodriver.version>
+		<logback.version>1.2.3</logback.version>
+		<de.bwaldvogel.version>1.11.1</de.bwaldvogel.version>
+		<picocli.version>4.6.1</picocli.version>
+		<awaitility.version>4.0.2</awaitility.version>
+		<sonar.version>3.8.0.2131</sonar.version>
+		<sonar.organization>syedali430</sonar.organization>
+		<org.codehaus.mojo.version>3.0.0</org.codehaus.mojo.version>
+		<surefire.version>3.0.0-M5</surefire.version>
+		<coveralls.version>4.3.0</coveralls.version>
+		<javax.xml.bind.version>2.3.1</javax.xml.bind.version>
+		<jacoco.verion>0.8.7</jacoco.verion>
+		<io.fabric8.version>0.40.2</io.fabric8.version>
+		<docker.skip>true</docker.skip>
+		<skipITs>true</skipITs>
+		<pitest.skip>false</pitest.skip>
+		<surefire.addOpens></surefire.addOpens>
+		<argLine></argLine>
+
+
+		<!-- For each rule to be ignored, add another eXX and two corresponding
+		properties with eXX in the name as below -->
+		<sonar.issue.ignore.multicriteria>e11,e12,e13,e14</sonar.issue.ignore.multicriteria>
+
+		<!-- Disable rule for "Local variable and method parameter names should
+		comply with a naming convention" -->
+		<sonar.issue.ignore.multicriteria.e11.ruleKey>
+			java:S117
+		</sonar.issue.ignore.multicriteria.e11.ruleKey>
+		<sonar.issue.ignore.multicriteria.e11.resourceKey>
+			**/*SwingView.java
+		</sonar.issue.ignore.multicriteria.e11.resourceKey>
+		<!-- Disable rule for "Use static access with
+		"javax.swing.WindowConstants" -->
+		<sonar.issue.ignore.multicriteria.e12.ruleKey>
+			java:S3252
+		</sonar.issue.ignore.multicriteria.e12.ruleKey>
+		<sonar.issue.ignore.multicriteria.e12.resourceKey>
+			**/*SwingView.java
+		</sonar.issue.ignore.multicriteria.e12.resourceKey>
+		<!-- Disable rule for "Tests should include assertions": SonarQube is
+		not aware of AssertJ Swing -->
+		<sonar.issue.ignore.multicriteria.e13.ruleKey>
+			java:S2699
+		</sonar.issue.ignore.multicriteria.e13.ruleKey>
+		<sonar.issue.ignore.multicriteria.e13.resourceKey>
+			**/*SwingViewTest.java
+		</sonar.issue.ignore.multicriteria.e13.resourceKey>
+		<!-- Test classes should comply with a naming convention-->
+		<sonar.issue.ignore.multicriteria.e14.ruleKey>
+			java:S3577
+		</sonar.issue.ignore.multicriteria.e14.ruleKey>
+		<sonar.issue.ignore.multicriteria.e14.resourceKey>
+			**/*E2E.java
+		</sonar.issue.ignore.multicriteria.e14.resourceKey>
+
+		<sonar.junit.reportPaths>
+			${project.build.directory}/surefire-reports,
+			${project.build.directory}/failsafe-reports
+		</sonar.junit.reportPaths>
+		<sonar.coverage.exclusions>
+			**/com/example/inventorymanager/app/swing/**,
+			**/com/example/inventorymanager/repository/mongo/**,
+			**/com/example/inventorymanager/view/InventoryView*
+		</sonar.coverage.exclusions>
+
+
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-swing-junit</artifactId>
+			<version>${assertj-version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mokito.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>${mongodriver.version}</version>
+		</dependency>
+		<dependency>
+			<!-- required to see Mongo Java Driver logs -->
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.bwaldvogel</groupId>
+			<artifactId>mongo-java-server</artifactId>
+			<version>${de.bwaldvogel.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mongodb</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>${picocli.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<version>${awaitility.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-java</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-junit</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.22.1</version>
+				<configuration>
+					<argLine>@{argLine} ${surefire.addOpens}</argLine>
+					<skipITs>${skipITs}</skipITs>
+					<systemPropertyVariables>
+						<mongo.port>${mongo.mapped.port}</mongo.port>
+					</systemPropertyVariables>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-it</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>e2e-tests</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/*IT.java</exclude>
+							</excludes>
+							<includes>
+								<include>**/*E2E.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>bdd-tests</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/*IT.java</exclude>
+							</excludes>
+							<includes>
+								<include>**/*BDD.java</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>${sonar.version}</version>
+			</plugin>
+
+
+			<!-- Adding source folder for Intergration Testing -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>${org.codehaus.mojo.version}</version>
+				<executions>
+					<execution>
+						<id>add-test-source</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>src/it/java</source>
+								<source>src/e2e/java</source>
+								<source>src/bdd/java</source>
+							</sources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>add-test-resource</id>
+						<phase>generate-test-resources</phase>
+						<goals>
+							<goal>add-test-resource</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>src/bdd/resources</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+				<configuration>
+					<release>${maven.compiler.release}</release>
+				</configuration>
+			</plugin>
+			<!-- Surefire Plugin for Unit Testing -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.version}</version>
+				<configuration>
+					<argLine>@{argLine} ${surefire.addOpens}</argLine>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+
+			<!-- Pitest Plugin for Mutation Testing -->
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>${pitest-maven-version}</version>
+				<executions>
+					<execution>
+						<id>pitest</id>
+						<phase>test</phase>
+						<goals>
+							<goal>mutationCoverage</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skip>${pitest.skip}</skip>
+					<targetClasses>
+						<param>com.example.inventorymanager.*.*</param>
+					</targetClasses>
+					<targetTests>
+						<param>com.example.inventorymanager.*.*</param>
+					</targetTests>
+					<excludedClasses>
+						<param>com.example.inventorymanager.repository.**</param>
+						<param>com.example.inventorymanager.view.swing.**</param>
+						<param>com.example.inventorymanager.model.**</param>
+						<param>com.example.inventorymanager.app.**</param>
+					</excludedClasses>
+					<excludedTestClasses>
+						<param>com.example.inventorymanager.controller.**IT</param>
+						<param>com.example.inventorymanager.bdd.**</param>
+						<param>com.example.inventorymanager.**E2E</param>
+						<param>com.example.inventorymanager.app.**</param>
+						<param>com.example.inventorymanager.repository.**</param>
+						<param>com.example.inventorymanager.view.swing.**</param>
+						<param>com.example.inventorymanager.controller.racecondition.**</param>
+					</excludedTestClasses>
+					<mutators>
+						<mutator>DEFAULTS</mutator>
+					</mutators>
+					<mutationThreshold>80</mutationThreshold>
+					<outputFormats>
+						<param>HTML</param>
+					</outputFormats>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>${coveralls.version}</version>
+				<dependencies>
+					<!-- This is required when using JDK 9 or higher
+						since javax.xml.bind has been removed from the JDK -->
+					<dependency>
+						<groupId>javax.xml.bind</groupId>
+						<artifactId>jaxb-api</artifactId>
+						<version>${javax.xml.bind.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+			<!-- Docker Plugin -->
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>${io.fabric8.version}</version>
+				<configuration>
+					<skip>${docker.skip}</skip>
+					<images>
+						<image>
+							<name>mongo:4.4.3</name>
+							<run>
+								<ports>
+									<port>mongo.mapped.port:27017</port>
+								</ports>
+							</run>
+						</image>
+					</images>
+				</configuration>
+				<executions>
+					<execution>
+						<id>docker-start</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>docker-stop</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- JaCoCo Plugin for Code Coverage -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.verion}</version>
+				<configuration>
+					<excludes>
+						<exclude>com/example/inventorymanager/app/swing/**</exclude>
+						<exclude>com/example/inventorymanager/repository/mongo/**</exclude>
+						<exclude>com/example/inventorymanager/view/InventoryView*</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>PACKAGE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.50</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
+
+	</build>
+	<profiles>
+		<profile>
+			<id>jdk9plus-opens</id>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<properties>
+				<surefire.addOpens>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED</surefire.addOpens>
+			</properties>
+		</profile>
+		<profile>
+			<id>with-docker</id>
+			<properties>
+				<docker.skip>false</docker.skip>
+				<skipITs>false</skipITs>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>mutation</id>
+			<properties>
+				<pitest.skip>false</pitest.skip>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>skip-testcontainers</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>**/*Testcontainers*.java</exclude>
+							</excludes>
+						</configuration>
+						<executions>
+							<execution>
+								<id>e2e-tests</id>
+								<configuration>
+									<excludes>
+										<exclude>**/*E2E.java</exclude>
+									</excludes>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>jacoco</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.5</version>
+						<executions>
+							<execution>
+								<goals>
+									<goal>prepare-agent</goal>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>coveralls</id>
+			<build>
+				<plugins>
+					<plugin>
+						<!-- JaCoCo report is required by coveralls-maven-plugin -->
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<!-- configured in pluginManagement -->
+						<groupId>org.eluder.coveralls</groupId>
+						<artifactId>coveralls-maven-plugin</artifactId>
+						<version>${coveralls.version}</version>
+						<dependencies>
+							<dependency>
+								<groupId>javax.xml.bind</groupId>
+								<artifactId>jaxb-api</artifactId>
+								<version>${javax.xml.bind.version}</version>
+							</dependency>
+						</dependencies>
+						<executions>
+							<execution>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+	</profiles>
+
+
+</project>
