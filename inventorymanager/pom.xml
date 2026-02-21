@@ -38,7 +38,6 @@
 		<docker.skip>true</docker.skip>
 		<skipITs>true</skipITs>
 		<pitest.skip>false</pitest.skip>
-		<surefire.addOpens></surefire.addOpens>
 		<argLine></argLine>
 
 
@@ -190,7 +189,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.1</version>
 				<configuration>
-					<argLine>@{argLine} ${surefire.addOpens}</argLine>
+					<argLine>@{argLine}</argLine>
 					<skipITs>${skipITs}</skipITs>
 					<systemPropertyVariables>
 						<mongo.port>${mongo.mapped.port}</mongo.port>
@@ -296,7 +295,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire.version}</version>
 				<configuration>
-					<argLine>@{argLine} ${surefire.addOpens}</argLine>
+					<argLine>@{argLine}</argLine>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
@@ -447,15 +446,6 @@
 
 	</build>
 	<profiles>
-		<profile>
-			<id>jdk9plus-opens</id>
-			<activation>
-				<jdk>[9,)</jdk>
-			</activation>
-			<properties>
-				<surefire.addOpens>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/jdk.internal.misc=ALL-UNNAMED</surefire.addOpens>
-			</properties>
-		</profile>
 		<profile>
 			<id>with-docker</id>
 			<properties>
